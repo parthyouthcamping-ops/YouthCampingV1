@@ -164,7 +164,7 @@ export default function LuxuryView() {
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 leading-none">Your Travel Journey</p>
                             <p className="text-xl font-[900] text-primary leading-none">
-                                ₹{(selectedTier === 'standard' ? q.lowLevelPrice : q.highLevelPrice).toLocaleString()}
+                                ₹{(selectedTier === 'standard' ? (q.lowLevelPrice || 0) : (q.highLevelPrice || 0)).toLocaleString()}
                             </p>
                         </div>
                     </div>
@@ -319,14 +319,14 @@ export default function LuxuryView() {
                             className={`px-8 py-4 rounded-[1.5rem] flex flex-col items-center transition-all ${selectedTier === 'standard' ? 'bg-white shadow-xl text-primary' : 'text-gray-400 hover:text-gray-600'}`}
                         >
                             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Hotel Option 1</span>
-                            <span className="text-[11px] font-semibold mt-1">₹{q.lowLevelPrice.toLocaleString()} Per Person</span>
+                            <span className="text-[11px] font-semibold mt-1">₹{(q.lowLevelPrice || 0).toLocaleString()} Per Person</span>
                         </button>
                         <button
                             onClick={() => setSelectedTier('luxury')}
                             className={`px-8 py-4 rounded-[1.5rem] flex flex-col items-center transition-all ${selectedTier === 'luxury' ? 'bg-primary shadow-xl text-white' : 'text-gray-400 hover:text-gray-600'}`}
                         >
                             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Hotel Option 2</span>
-                            <span className="text-[11px] font-semibold mt-1 opacity-80">₹{q.highLevelPrice.toLocaleString()} Per Person</span>
+                            <span className="text-[11px] font-semibold mt-1 opacity-80">₹{(q.highLevelPrice || 0).toLocaleString()} Per Person</span>
                         </button>
                     </div>
                 </div>
@@ -466,16 +466,16 @@ export default function LuxuryView() {
                                 <div className="space-y-2 p-8 bg-gray-50/50 rounded-[2.5rem] border border-gray-100">
                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Price Per Person</p>
                                     <p className="text-6xl font-semibold text-primary tracking-tighter">
-                                        ₹{(selectedTier === 'standard' ? q.lowLevelPrice : q.highLevelPrice).toLocaleString()}
+                                        ₹{(selectedTier === 'standard' ? (q.lowLevelPrice || 0) : (q.highLevelPrice || 0)).toLocaleString()}
                                     </p>
                                 </div>
 
                                 <div className="space-y-2 p-8 bg-primary/[0.03] rounded-[2.5rem] border border-primary/5">
                                     <p className="text-[10px] font-black text-primary uppercase tracking-widest">Total Package Value</p>
                                     <p className="text-5xl font-semibold text-primary tracking-tighter">
-                                        ₹{((selectedTier === 'standard' ? q.lowLevelPrice : q.highLevelPrice) * q.pax).toLocaleString()}
+                                        ₹{((selectedTier === 'standard' ? (q.lowLevelPrice || 0) : (q.highLevelPrice || 0)) * (q.pax || 0)).toLocaleString()}
                                     </p>
-                                    <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mt-2">{q.pax} Premium Travelers</p>
+                                    <p className="text-[10px] font-black text-primary/40 uppercase tracking-widest mt-2">{q.pax || 0} Premium Travelers</p>
                                 </div>
                             </div>
 
@@ -499,52 +499,54 @@ export default function LuxuryView() {
 
 
             {/* Expert Section */}
-            <section className="py-24 container mx-auto px-6 max-w-3xl">
-                <GlassCard className="p-10 md:p-12 rounded-[3rem] text-center md:text-left shadow-2xl border-gray-50 bg-white/50">
-                    <div className="flex flex-col md:flex-row items-center gap-10">
-                        <div className="relative flex-shrink-0">
-                            <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-primary/10 shadow-lg">
-                                <img
-                                    src={q.expert.photo || "https://ui-avatars.com/api/?name=" + encodeURIComponent(q.expert.name || "Expert") + "&background=random"}
-                                    className="w-full h-full object-cover"
-                                    alt={q.expert.name}
-                                />
+            {q.expert && (
+                <section className="py-24 container mx-auto px-6 max-w-3xl">
+                    <GlassCard className="p-10 md:p-12 rounded-[3rem] text-center md:text-left shadow-2xl border-gray-50 bg-white/50">
+                        <div className="flex flex-col md:flex-row items-center gap-10">
+                            <div className="relative flex-shrink-0">
+                                <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-primary/10 shadow-lg">
+                                    <img
+                                        src={q.expert.photo || "https://ui-avatars.com/api/?name=" + encodeURIComponent(q.expert.name || "Expert") + "&background=random"}
+                                        className="w-full h-full object-cover"
+                                        alt={q.expert.name}
+                                    />
+                                </div>
+                                <div className="absolute -bottom-1 -right-1 bg-[#25D366] w-6 h-6 rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                                    <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                                </div>
                             </div>
-                            <div className="absolute -bottom-1 -right-1 bg-[#25D366] w-6 h-6 rounded-full flex items-center justify-center border-2 border-white shadow-md">
-                                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                            </div>
-                        </div>
 
-                        <div className="flex-1 space-y-4">
-                            <div className="space-y-1">
-                                <p className="text-primary font-black uppercase tracking-[0.3em] text-[9px]">Talk to your travel expert</p>
-                                <h2 className="text-3xl font-black tracking-tight text-gray-900 leading-tight">
-                                    {q.expert.name || "Your Expert"}
-                                </h2>
-                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest opacity-80">
-                                    {q.expert.designation || "Youthcamping Travel Expert"}
+                            <div className="flex-1 space-y-4">
+                                <div className="space-y-1">
+                                    <p className="text-primary font-black uppercase tracking-[0.3em] text-[9px]">Talk to your travel expert</p>
+                                    <h2 className="text-3xl font-black tracking-tight text-gray-900 leading-tight">
+                                        {q.expert.name || "Your Expert"}
+                                    </h2>
+                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest opacity-80">
+                                        {q.expert.designation || "Youthcamping Travel Expert"}
+                                    </p>
+                                </div>
+
+                                <p className="text-base text-gray-500 font-medium leading-relaxed italic">
+                                    &quot;I have personally curated every element of this journey to ensure it exceeds your expectations of luxury.&quot;
                                 </p>
-                            </div>
 
-                            <p className="text-base text-gray-500 font-medium leading-relaxed italic">
-                                &quot;I have personally curated every element of this journey to ensure it exceeds your expectations of luxury.&quot;
-                            </p>
-
-                            <div className="pt-2 no-print">
-                                <Button
-                                    onClick={() => {
-                                        const message = encodeURIComponent(`Hi ${q.expert.name || 'Travel Expert'}, I would like to book my trip from this quotation: ${window.location.href}`);
-                                        window.open(`https://wa.me/${q.expert.whatsapp}?text=${message}`, '_blank');
-                                    }}
-                                    className="inline-flex items-center gap-4 bg-[#25D366] text-white px-8 py-4 rounded-2xl font-black tracking-widest uppercase text-xs shadow-lg shadow-green-200 hover:scale-105 active:scale-95 transition-all text-left h-auto"
-                                >
-                                    <MessageCircle size={18} /> Chat on WhatsApp
-                                </Button>
+                                <div className="pt-2 no-print">
+                                    <Button
+                                        onClick={() => {
+                                            const message = encodeURIComponent(`Hi ${q.expert.name || 'Travel Expert'}, I would like to book my trip from this quotation: ${window.location.href}`);
+                                            window.open(`https://wa.me/${q.expert.whatsapp}?text=${message}`, '_blank');
+                                        }}
+                                        className="inline-flex items-center gap-4 bg-[#25D366] text-white px-8 py-4 rounded-2xl font-black tracking-widest uppercase text-xs shadow-lg shadow-green-200 hover:scale-105 active:scale-95 transition-all text-left h-auto"
+                                    >
+                                        <WhatsAppIcon size={18} /> Chat on WhatsApp
+                                    </Button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </GlassCard>
-            </section >
+                    </GlassCard>
+                </section >
+            )}
 
             {/* Footer */}
             < footer className="py-20 bg-gray-900 text-white" >

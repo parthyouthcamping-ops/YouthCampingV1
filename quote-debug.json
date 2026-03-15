@@ -1,0 +1,182 @@
+{
+  "id": "0424eb59-597c-4893-ad4d-768200e634ef",
+  "pax": 2,
+  "slug": "trip-luxury-0424e",
+  "expert": {
+    "name": "",
+    "photo": null,
+    "whatsapp": ""
+  },
+  "hotels": [],
+  "status": "Draft",
+  "duration": "",
+  "includes": [
+    "Hotel Stay",
+    "All Transfers",
+    "Sightseeing",
+    "Breakfast & Dinner"
+  ],
+  "routeMap": null,
+  "createdAt": "2026-03-15T06:49:06.859Z",
+  "heroImage": "https://res.cloudinary.com/dltxunwku/image/upload/v1773557434/us33yvb9p2b8cuv5tkda.jpg",
+  "itinerary": [
+    {
+      "id": "21a65225-4355-4bc6-8611-a1fdfd274345",
+      "day": 1,
+      "title": "Arrival at Kochi | Drive to Munnar",
+      "photos": [],
+      "activities": [
+        "Arrival",
+        "",
+        "Transfer",
+        "",
+        "Waterfalls",
+        "",
+        "Munnar",
+        "",
+        "Anamudi",
+        "",
+        "Check-in",
+        "",
+        "Leisure",
+        "",
+        "Stroll",
+        "",
+        "Overnight Stay"
+      ],
+      "description": "On arrival at Kochi Airport/Station, you will be picked up and transferred to Munnar. En route, enjoy scenic stops at Valara and Cheeyappara Waterfalls. Munnar is a beautiful hill station in the Western Ghats, located near Anamudi, the highest peak in South India. By noon, arrive in Munnar and check in to the hotel. In the evening, enjoy leisure time or take a walk around the local area. Overnight stay at the hotel in Munnar."
+    },
+    {
+      "id": "545e7c80-0e36-4ead-8a27-0af1dd52c1d9",
+      "day": 2,
+      "title": "Munnar Local Sightseeing",
+      "photos": [],
+      "activities": [
+        "Breakfast",
+        "",
+        "Sightseeing",
+        "",
+        "Tea Plantations",
+        "",
+        "Blossom Park",
+        "",
+        "Mattupetty Dam",
+        "",
+        "Echo Point",
+        "",
+        "Kundala Lake",
+        "",
+        "Eravikulam Park",
+        "",
+        "Tea Estate",
+        "",
+        "Leisure",
+        "",
+        "Overnight"
+      ],
+      "description": "After breakfast, proceed for local sightseeing in and around Munnar. Explore the beautiful tea plantations, Blossom Park, Mattupetty Lake and Dam, and Echo Point. Visit Kundala Lake, Eravikulam National Park, and Sevenmallay Tea Estate while enjoying the scenic beauty of this hill station. After the sightseeing tour, return to the hotel and relax. Overnight stay at the hotel in Munnar."
+    },
+    {
+      "id": "210cc5e3-10f5-42bd-8f70-5b61f403a103",
+      "day": 3,
+      "title": "Drive from Munnar to Thekkady",
+      "photos": [],
+      "activities": [
+        "Breakfast",
+        "",
+        "Transfer",
+        "",
+        "Thekkady",
+        "",
+        "Check-in",
+        "",
+        "Leisure",
+        "",
+        "Sightseeing",
+        "",
+        "Periyar Sanctuary",
+        "",
+        "Wildlife",
+        "",
+        "Spice Market",
+        "",
+        "Overnight"
+      ],
+      "description": "Wake up early in the morning and after breakfast, drive to Thekkady. Upon arrival, check in to the hotel and relax for some time. Later, proceed for local sightseeing around Thekkady, home to the famous Periyar Wildlife Sanctuary known for its rich wildlife and dense evergreen forests. In the evening, you can visit the local market to shop for fresh spices. Overnight stay at the hotel in Thekkady."
+    },
+    {
+      "id": "ebe94982-d194-4d67-92bd-b0ac5991858b",
+      "day": 4,
+      "title": "Drive from Thekkady to Alleppey",
+      "photos": [],
+      "activities": [
+        "Breakfast",
+        "",
+        "Transfer",
+        "",
+        "Alleppey",
+        "",
+        "Check-in",
+        "",
+        "Houseboat",
+        "",
+        "Backwaters",
+        "",
+        "Cruise",
+        "",
+        "Lunch",
+        "",
+        "Dinner",
+        "",
+        "Overnight"
+      ],
+      "description": "After breakfast, drive to Alleppey. Upon arrival, check in to the houseboat or hotel and explore the beautiful backwaters of Kerala. Relax while cruising through the calm backwaters and enjoy scenic views of coconut trees and village life. Guests staying in the houseboat will enjoy lunch and dinner onboard. Overnight stay in a houseboat or hotel in Alleppey."
+    },
+    {
+      "id": "5d53f637-e533-4342-8077-4a2fa3dcff25",
+      "day": 5,
+      "title": "Alleppey to Kochi | Tour Ends",
+      "photos": [],
+      "activities": [
+        "Breakfast",
+        "",
+        "Check-out",
+        "",
+        "Transfer",
+        "",
+        "Kochi",
+        "",
+        "Drop-off",
+        "",
+        "Departure",
+        "",
+        "Memories"
+      ],
+      "description": "After breakfast, check out from the houseboat or hotel in Alleppey and begin your drive to Kochi. Upon arrival, you will be dropped at Kochi Airport or Railway Station for your onward journey, ending the trip with wonderful memories and experiences."
+    }
+  ],
+  "updatedAt": "2026-03-15T06:55:53.807Z",
+  "clientName": "",
+  "coverImage": null,
+  "exclusions": [
+    "Airfare",
+    "Visa Fees",
+    "Personal Expenses",
+    "Travel Insurance"
+  ],
+  "destination": "Mesmerizing Kerala Getaway ",
+  "roomSharing": "Double",
+  "travelDates": {
+    "to": "",
+    "from": ""
+  },
+  "lowLevelPrice": 17200,
+  "customSections": [],
+  "highLevelPrice": null,
+  "lowLevelHotels": [],
+  "highLevelHotels": [],
+  "transportOption": "Private Car",
+  "experiencePhotos": [
+    "https://res.cloudinary.com/dltxunwku/image/upload/v1773557447/gnawaou4dgjh8dkwqo3p.jpg"
+  ]
+}
