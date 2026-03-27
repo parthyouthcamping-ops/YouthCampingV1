@@ -55,9 +55,6 @@ export default function LuxuryView() {
         load();
     }, [slug]);
 
-    const handleDownloadPDF = () => {
-        window.print();
-    };
 
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-white font-montserrat">
@@ -102,13 +99,6 @@ export default function LuxuryView() {
                     </div>
                     
                     <div className="flex items-center gap-3">
-                        <Button 
-                            onClick={handleDownloadPDF}
-                            variant="outline" 
-                            className="hidden md:flex rounded-xl font-black uppercase text-[10px] tracking-widest border-2 border-gray-100 hover:border-primary hover:text-primary h-12 px-6"
-                        >
-                            <Download size={14} className="mr-2" /> Save PDF
-                        </Button>
                         <Button 
                              onClick={() => {
                                 const message = encodeURIComponent(`Hi ${q.expert.name || 'Travel Expert'}, I want to book my ${q.destination} trip! Link: ${window.location.href}`);
