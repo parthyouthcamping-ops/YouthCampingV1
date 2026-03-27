@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { PREDEFINED_QUOTES } from "@/lib/itineraries";
 import { getQuotations } from "@/lib/store";
 import LuxuryQuotationUI from "./LuxuryQuotationUI";
+import { neon } from '@neondatabase/serverless';
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
@@ -11,13 +12,18 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     let data = PREDEFINED_QUOTES[slug];
 
     // Optional: Fallback to DB if not in predefined (to be robust)
-    // But as per Task 1, showing 404 if not found is key.
     if (!data) {
-        // We call getQuotations which might have been saved in DB
-        // Note: on the server, getQuotations might need special care with localStorage
-        // but for predefined slugs like bali-6n7d, it will work.
-        const allQuotations = await getQuotations();
-        data = allQuotations.find(q => q.slug === slug) as any;
+        try {
+            if (process.env.DATABASE_URL) {
+                const sql = neon(process.env.DATABASE_URL);
+                const result = await sql`SELECT data FROM quotations WHERE slug = ${slug} LIMIT 1`;
+                if (result.length > 0) {
+                    data = result[0].data;
+                }
+            }
+        } catch (e) {
+            console.error("Failed to fetch quotation from db:", e);
+        }
     }
 
     // TASK 3: Remove Admin Fallback - Use notFound()
