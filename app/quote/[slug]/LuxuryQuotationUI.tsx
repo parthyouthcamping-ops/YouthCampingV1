@@ -96,9 +96,12 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                         <h4 className="text-white text-[10px] md:text-sm font-black uppercase tracking-[0.4em] md:tracking-[0.6em] drop-shadow-lg opacity-90 px-4">
                             A CURATED JOURNEY PREPARED FOR {q.clientName.toUpperCase()}
                         </h4>
-                        <h1 className="text-4xl sm:text-6xl md:text-8xl lg:text-[11rem] font-[900] text-white tracking-tighter drop-shadow-2xl leading-[0.9] md:leading-[0.8] uppercase mb-4 px-4 break-words">
+                        <h1 className="text-4xl sm:text-6xl md:text-8xl lg:text-[11rem] font-[900] text-white tracking-tighter drop-shadow-2xl leading-[0.9] md:leading-[0.8] uppercase mb-1 px-4 break-words">
                             {q.destination}
                         </h1>
+                        <p className="text-white/80 font-medium italic text-lg md:text-2xl tracking-wide mb-4">
+                            &quot;{q.slug.includes('bali') ? 'The Heaven on Earth awaits you.' : 'A Journey through time and beauty.'}&quot;
+                        </p>
                         <div className="flex items-center justify-center gap-4 md:gap-6 mt-4">
                             <span className="h-[1px] w-12 md:w-20 bg-white/40" />
                             <span className="text-white font-bold text-xs md:text-xl tracking-[0.2em] md:tracking-[0.4em] uppercase">
@@ -216,14 +219,21 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                                         viewport={{ once: true }}
                                         className="flex-1 w-full space-y-6 md:space-y-10"
                                     >
-                                        <div className="flex items-center gap-4 md:gap-6">
-                                            <span className="text-5xl md:text-7xl font-black text-primary/10 tracking-tighter italic shrink-0">0{day.day}</span>
+                                        <div className="flex flex-col gap-4">
+                                            <div className="inline-flex items-center gap-3 px-6 py-2 bg-primary/10 rounded-full w-fit">
+                                                <span className="text-primary font-black uppercase text-[10px] tracking-widest italic">Day 0{day.day}</span>
+                                            </div>
                                             <div className="space-y-1 min-w-0">
                                                 <h3 className="text-xl sm:text-2xl md:text-5xl font-black tracking-tight text-gray-900 uppercase truncate">{day.title}</h3>
                                                 <div className="flex flex-wrap items-center gap-2 md:gap-4 text-primary italic font-bold text-[10px] md:text-xs uppercase tracking-widest">
-                                                    <span>{day.stay || 'Premium Stay'}</span>
-                                                    <span className="hidden md:block h-1 w-1 bg-primary rounded-full" />
-                                                    <span>{day.meals || 'Breakfast Included'}</span>
+                                                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-lg">
+                                                        <HotelIcon size={12} className="opacity-50" />
+                                                        <span>{day.stay || 'Premium Stay'}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-lg">
+                                                        <Utensils size={12} className="opacity-50" />
+                                                        <span>{day.meals || 'Breakfast Included'}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -315,29 +325,101 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                 </div>
             </section>
 
-            {/* Optional Experiences */}
-             {q.optionalActivities && q.optionalActivities.length > 0 && (
-                <section className="py-16 md:py-32 container mx-auto px-4 md:px-6 pdf-section">
-                    <div className="flex flex-col items-center text-center gap-4 md:gap-6 mb-12 md:mb-16">
-                        <span className="text-primary font-black uppercase tracking-[0.2em] md:tracking-[0.4em] text-[10px] md:text-xs italic">Enhance Your Journey</span>
-                        <h2 className="text-3xl md:text-5xl font-black text-gray-900 uppercase">Optional Add-ons</h2>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-                        {q.optionalActivities.map((opt, i) => (
-                            <GlassCard key={i} className="p-6 md:p-10 rounded-3xl md:rounded-[3rem] border border-gray-100 hover:border-primary/20 transition-all flex flex-col justify-between group">
-                                <div className="space-y-3 md:space-y-4">
-                                    <h3 className="text-lg md:text-xl font-black text-gray-900 uppercase group-hover:text-primary transition-colors truncate">{opt.name}</h3>
-                                    <p className="text-xs md:text-sm text-gray-400 font-medium leading-relaxed italic line-clamp-2 md:line-clamp-none">{opt.description}</p>
+            {/* Trust & Testimonials Section */}
+            <section className="py-32 bg-white pdf-section">
+                <div className="container mx-auto px-4 md:px-6">
+                    <div className="flex flex-col lg:flex-row items-center gap-20">
+                        <div className="flex-1 space-y-10">
+                            <div className="space-y-4">
+                                <span className="text-primary font-black uppercase tracking-[0.4em] text-xs italic">Why Choose Us</span>
+                                <h2 className="text-5xl md:text-7xl font-black text-gray-900 uppercase tracking-tighter leading-none">
+                                    Trusted by <span className="text-primary italic">10K+</span> Travelers
+                                </h2>
+                            </div>
+                            <div className="flex items-center gap-6 p-6 bg-gray-50 rounded-3xl border border-gray-100 w-fit">
+                                <div className="flex items-center gap-1 text-primary">
+                                    {[1,2,3,4,5].map(s => <Star key={s} size={20} fill="currentColor" />)}
                                 </div>
-                                <div className="mt-6 md:mt-8 pt-4 md:pt-6 border-t border-gray-50 flex items-center justify-between">
-                                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-300">Investment</span>
-                                    <span className="text-base md:text-lg font-black text-primary">₹{opt.price.toLocaleString()}</span>
-                                </div>
-                            </GlassCard>
-                        ))}
+                                <div className="h-10 w-px bg-gray-200" />
+                                <span className="text-lg font-black text-gray-900">4.8 AVERAGE RATING</span>
+                            </div>
+                            <p className="text-xl text-gray-500 font-medium italic leading-relaxed">
+                                Join the thousands who have experienced the Youthcamping difference. We prioritize your comfort and experience over everything else.
+                            </p>
+                        </div>
+                        <div className="flex-1 grid grid-cols-1 gap-6">
+                            {[
+                                { name: "Rahul S.", review: "Youthcamping made our Bali trip absolutely seamless. The luxury villas were breathtaking!", rating: 5 },
+                                { name: "Priya M.", review: "Best travel coordinators ever. The attention to detail in our Vietnam itinerary was unmatched.", rating: 5 }
+                            ].map((testi, i) => (
+                                <GlassCard key={i} className="p-8 rounded-3xl border border-gray-100">
+                                    <div className="flex items-center gap-1 text-primary mb-4">
+                                        {[...Array(testi.rating)].map((_, s) => <Star key={s} size={14} fill="currentColor" />)}
+                                    </div>
+                                    <p className="text-base text-gray-600 font-medium italic mb-4">&quot;{testi.review}&quot;</p>
+                                    <p className="text-sm font-black text-gray-900 uppercase tracking-widest">{testi.name} - Verified Traveler</p>
+                                </GlassCard>
+                            ))}
+                        </div>
                     </div>
-                </section>
-            )}
+                </div>
+            </section>
+
+            {/* Booking Steps & Payment Policy */}
+            <section className="py-32 bg-gray-50/50 pdf-section">
+                <div className="container mx-auto px-4 md:px-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
+                        <div className="space-y-12">
+                            <div className="space-y-4">
+                                <span className="text-primary font-black uppercase tracking-[0.4em] text-xs italic">The Process</span>
+                                <h2 className="text-5xl font-black text-gray-900 uppercase">3 Easy Booking Steps</h2>
+                            </div>
+                            <div className="space-y-8">
+                                {[
+                                    { step: "01", title: "Review Itinerary", desc: "Our expert-curated day-wise plan covers the best of the destination." },
+                                    { step: "02", title: "Confirm on WhatsApp", desc: "Talk to your dedicated coordinator and finalize dates." },
+                                    { step: "03", title: "Pack Your Bags!", desc: "Pay the booking amount and get your confirmation instantly." }
+                                ].map((s, i) => (
+                                    <div key={i} className="flex gap-8 group">
+                                        <span className="text-5xl font-black text-primary/20 group-hover:text-primary/100 transition-colors italic shrink-0">{s.step}</span>
+                                        <div className="space-y-2">
+                                            <h4 className="text-xl font-black text-gray-900 uppercase">{s.title}</h4>
+                                            <p className="text-sm text-gray-500 font-medium italic">{s.desc}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <GlassCard className="p-10 md:p-14 rounded-[4rem] bg-gray-900 text-white border-none shadow-4xl self-start">
+                            <div className="space-y-8">
+                                <div className="space-y-2 border-b border-white/10 pb-6">
+                                    <h4 className="text-2xl font-black text-primary uppercase">Payment Policy</h4>
+                                    <p className="text-xs text-white/40 font-bold uppercase tracking-widest">Transparency is our priority</p>
+                                </div>
+                                <div className="space-y-6">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-white/60 font-medium italic">Booking Amount</span>
+                                        <span className="font-black text-primary">₹10,000 / Person</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-white/60 font-medium italic">Confirmation</span>
+                                        <span className="font-black text-white uppercase italic">Instant</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-white/60 font-medium italic">Cancellation</span>
+                                        <span className="font-black text-white">Full Refund (T&C)</span>
+                                    </div>
+                                </div>
+                                <Button 
+                                     onClick={() => window.open(`https://wa.me/${q.expert?.whatsapp}`, '_blank')}
+                                     className="w-full bg-primary text-white hover:bg-white hover:text-gray-900 py-8 rounded-2xl font-black uppercase tracking-widest transition-all">
+                                    Confirm with Coordinator
+                                </Button>
+                            </div>
+                        </GlassCard>
+                    </div>
+                </div>
+            </section>
 
             {/* Logistics & Expertise */}
             <section className="py-16 md:py-32 bg-gray-900 text-white rounded-3xl md:rounded-[5rem] mx-4 md:mx-6 mb-16 md:mb-32 p-8 md:p-20 pdf-section">
