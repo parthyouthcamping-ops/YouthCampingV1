@@ -55,13 +55,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     ))}
                 </nav>
 
-                <div className="mt-auto">
+                <div className="mt-auto flex flex-col gap-6">
                     <GlassCard variant="orange" className="p-6 rounded-3xl">
                         <h3 className="font-bold text-primary text-sm mb-2">Need Help?</h3>
                         <p className="text-[10px] text-primary/60 font-medium leading-relaxed">
                             If you encounter any issues building a luxury proposal, contact support.
                         </p>
                     </GlassCard>
+
+                    <Button 
+                        variant="ghost" 
+                        className="w-full text-red-500 hover:bg-red-50 hover:text-red-600 rounded-2xl py-4 font-bold border border-transparent hover:border-red-100"
+                        onClick={() => {
+                            document.cookie = "admin_token=; path=/; max-age=0";
+                            window.location.href = "/";
+                        }}
+                    >
+                        Sign Out
+                    </Button>
                 </div>
             </aside>
 

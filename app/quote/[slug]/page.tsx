@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { getQuotationBySlug } from "@/lib/store";
 import { Quotation } from "@/lib/types";
 import { useBrandSettings } from "@/hooks/useBrandSettings";
@@ -24,10 +24,10 @@ import {
     MessageCircle as WhatsAppIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
 export default function LuxuryView() {
     const { slug } = useParams();
     const [q, setQ] = useState<Quotation | null>(null);
+    const [loading, setLoading] = useState(true);
     const { brand } = useBrandSettings();
     const [selectedTier, setSelectedTier] = useState<'standard' | 'luxury'>('standard');
     const { scrollY } = useScroll();
@@ -36,14 +36,23 @@ export default function LuxuryView() {
     useEffect(() => {
         const load = async () => {
             if (slug) {
-                const quoteData = await getQuotationBySlug(slug as string);
-                setQ(quoteData || null);
+                try {
+                    const quoteData = await getQuotationBySlug(slug as string);
+                    setQ(quoteData || null);
+                } catch (error) {
+                    console.error("Failed to load quotation:", error);
+                    setQ(null);
+                } finally {
+                    setLoading(false);
+                }
+            } else {
+                setLoading(false);
             }
         };
         load();
     }, [slug]);
 
-    if (!q) return (
+    if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-white font-montserrat">
             <div className="text-center animate-pulse">
                 <h1 className="text-4xl font-black text-primary italic">YouthCamping</h1>
@@ -51,6 +60,10 @@ export default function LuxuryView() {
             </div>
         </div>
     );
+
+    if (!q) {
+        return notFound();
+    }
 
     return (
         <div className="bg-white min-h-screen font-montserrat text-[#1a1a1a] selection:bg-primary/20">
