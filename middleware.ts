@@ -1,19 +1,14 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export function middleware(req: NextRequest) {
+  if (req.nextUrl.pathname.startsWith("/admin")) {
+    const auth = req.cookies.get("auth");
 
-  // Protect /admin routes
-  if (pathname.startsWith('/admin')) {
-    const adminToken = request.cookies.get('admin_token')?.value;
-
-    // Simple auth check: if token is not 'authenticated', redirect to home
-    if (adminToken !== 'authenticated') {
-      return NextResponse.redirect(new URL('/', request.url));
+    if (!auth) {
+      return NextResponse.redirect(new URL("/", req.url));
     }
   }
-
   return NextResponse.next();
 }
 
