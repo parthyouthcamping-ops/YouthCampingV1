@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
-import { Plus, LayoutDashboard, FileText, Palette, Hotel, Calendar, UserCheck } from "lucide-react";
+import { Plus, LayoutDashboard, FileText, Palette, Hotel, Calendar, UserCheck, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "All Quotes", icon: LayoutDashboard, id: "all", href: "/admin" },
         { name: "Create New", icon: Plus, id: "new", href: "/admin/new" },
         { name: "Branding", icon: Palette, id: "branding", href: "/admin/branding" },
+    ];
+
+    const aiLinks = [
+        { name: "AI Generator", icon: Wand2, id: "ai-generator", href: "/admin/ai-generator" },
     ];
 
     return (
@@ -51,6 +55,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         >
                             <link.icon size={20} />
                             {link.name}
+                        </Link>
+                    ))}
+
+                    {/* AI section separator */}
+                    <div className="flex items-center gap-3 px-2 pt-2">
+                        <div className="h-px flex-1 bg-amber-100" />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-amber-400">AI Tools</span>
+                        <div className="h-px flex-1 bg-amber-100" />
+                    </div>
+
+                    {aiLinks.map((link) => (
+                        <Link
+                            key={link.id}
+                            href={link.href}
+                            className={cn(
+                                "flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all transform hover:translate-x-1",
+                                activeTab === link.id
+                                    ? "bg-gradient-to-r from-amber-500 to-primary text-white shadow-xl shadow-amber-400/20"
+                                    : "text-amber-600 hover:bg-amber-50"
+                            )}
+                            onClick={() => setActiveTab(link.id)}
+                        >
+                            <link.icon size={20} />
+                            {link.name}
+                            <span className="ml-auto text-[8px] font-black uppercase tracking-widest bg-amber-100 text-amber-600 px-2 py-1 rounded-full">NEW</span>
                         </Link>
                     ))}
                 </nav>
