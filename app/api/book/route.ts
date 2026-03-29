@@ -48,32 +48,40 @@ export async function POST(request: Request) {
         } catch(e) { console.error('Error adding columns', e); }
 
         if (action === 'update_status') {
-             const getSlugRes = await sql`SELECT trip_slug FROM bookings WHERE id = ${id}`;
-             const activeSlug = tripSlug || (getSlugRes.length > 0 ? getSlugRes[0].trip_slug : null);
+            const getSlugRes = await sql`SELECT trip_slug FROM bookings WHERE id = ${id}`;
+            const activeSlug = tripSlug || (getSlugRes.length > 0 ? getSlugRes[0].trip_slug : null);
 
-             await sql`UPDATE bookings SET status = ${status} WHERE id = ${id}`;
-             // Also update Quotation status
-             if (activeSlug) {
-                 const res = await fetch(`${new URL(request.url).origin}/api/db`, {
-                     method: 'POST',
-                     headers: { 'Content-Type': 'application/json' },
-                     body: JSON.stringify({ action: 'getAll' })
-                 });
-                 if (res.ok) {
-                     const qs: any[] = await res.json();
-                     const q = qs.find(q => q.slug === activeSlug);
-                     if (q && q.bookingStatus !== 'booked') {
-                         q.bookingStatus = status;
-                         q.updatedAt = new Date().toISOString();
-                         await fetch(`${new URL(request.url).origin}/api/db`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'set', id: q.id, slug: q.slug, data: q })
-                         });
-                     }
-                 }
-             }
-             return NextResponse.json({ success: true });
+            await sql`UPDATE bookings SET status = ${status} WHERE id = ${id}`;
+
+            // Sync the quotation document's bookingStatus so the client page reflects it
+            if (activeSlug) {
+                try {
+                    const res = await fetch(`${new URL(request.url).origin}/api/db`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'getAll' })
+                    });
+                    if (res.ok) {
+                        const qs: any[] = await res.json();
+                        const q = qs.find((q: any) => q.slug === activeSlug);
+                        // Always allow status updates (admin can set any status)
+                        if (q) {
+                            q.bookingStatus = status;
+                            q.isBooked    = status === 'booked';
+                            q.isReserved  = status === 'reserved';
+                            q.updatedAt   = new Date().toISOString();
+                            await fetch(`${new URL(request.url).origin}/api/db`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ action: 'set', id: q.id, slug: q.slug, data: q })
+                            });
+                        }
+                    }
+                } catch (syncErr) {
+                    console.error('[API /book] Failed to sync quotation status:', syncErr);
+                }
+            }
+            return NextResponse.json({ success: true, status });
         }
 
         if (action === 'delete') {

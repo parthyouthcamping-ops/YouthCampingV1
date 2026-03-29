@@ -47,9 +47,11 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
         specialRequests: ''
     });
 
-    const isBooked = q.bookingStatus === 'booked' || booking?.status === 'booked';
-    const isPending = q.bookingStatus === 'pending' || booking?.status === 'pending';
-    const isReserved = q.bookingStatus === 'reserved' || booking?.status === 'reserved';
+    // Live status: booking state takes priority over server-rendered prop (avoids stale data)
+    const liveStatus: string = booking?.status || q.bookingStatus || 'sent';
+    const isBooked   = liveStatus === 'booked';
+    const isReserved = liveStatus === 'reserved';
+    const isPending  = liveStatus === 'pending';
 
     const { scrollY } = useScroll();
     const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
@@ -68,8 +70,22 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
         }
     };
 
+    // Sync quotation document's bookingStatus via PATCH so backend + frontend stay consistent
+    const syncQuotationStatus = async (newStatus: string) => {
+        try {
+            await fetch(`/api/quotation/${q.id}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+        } catch (err) {
+            console.error('Failed to sync quotation status', err);
+        }
+    };
+
     const handleBook = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isSubmitting || isBooked || isReserved || isPending) return; // prevent duplicate submissions
         setIsSubmitting(true);
         try {
             const res = await fetch('/api/book', {
@@ -77,48 +93,70 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     tripSlug: q.slug,
-                    ...bookingForm
+                    name: bookingForm.name,
+                    phone: bookingForm.phone,
+                    email: bookingForm.email,
+                    travelers: bookingForm.travelers,
+                    travelDates: bookingForm.travelDates,
+                    specialRequests: bookingForm.specialRequests,
                 })
             });
             const data = await res.json();
             if (res.ok && data.id) {
-                setBooking(data);
+                // Update local booking state immediately (instant UI sync — no page reload needed)
+                setBooking({ ...data, status: 'pending' });
                 setIsBookingModalOpen(false);
-                toast.success("Your trip has been successfully requested!");
+                // Also patch the quotation document so admin dashboard stays accurate
+                await syncQuotationStatus('pending');
+                toast.success("Booking request submitted! Redirecting to WhatsApp…");
                 
-                // WhatsApp nudge
-                const quoteIdStr = booking?.id || q.slug;
-                const message = encodeURIComponent(`Hi ${q.expert?.name || 'Travel Expert'},\n\nI just requested a booking for the *${q.destination}* trip.\n\n*Name:* ${bookingForm.name}\n*Travelers:* ${bookingForm.travelers}\n*Dates:* ${bookingForm.travelDates}\n*Quote ID:* ${quoteIdStr}\n\nLooking forward to connecting!`);
-                
-                // Use fallback expert number or generic if not present
-                const expertPhone = q.expert?.whatsapp || '';
-                if(expertPhone) {
-                   window.open(`https://wa.me/${expertPhone}?text=${message}`, '_blank');
+                // WhatsApp redirection with rich pre-filled message
+                const bookingRef = data.id || q.slug;
+                const waMessage = encodeURIComponent(
+                    `Hi ${q.expert?.name || 'Travel Expert'},\n\n` +
+                    `I've just submitted a booking request for my trip.\n\n` +
+                    `*Trip:* ${q.destination}\n` +
+                    `*Name:* ${bookingForm.name}\n` +
+                    `*Phone:* ${bookingForm.phone}\n` +
+                    `*Email:* ${bookingForm.email}\n` +
+                    `*Travelers:* ${bookingForm.travelers}\n` +
+                    `*Dates:* ${bookingForm.travelDates}\n` +
+                    (bookingForm.specialRequests ? `*Special Requests:* ${bookingForm.specialRequests}\n` : '') +
+                    `*Booking Ref:* ${bookingRef}\n\n` +
+                    `Looking forward to connecting!`
+                );
+                const expertPhone = (q.expert?.whatsapp || '').replace(/[^0-9]/g, '');
+                if (expertPhone) {
+                    setTimeout(() => window.open(`https://wa.me/${expertPhone}?text=${waMessage}`, '_blank'), 1500);
                 } else {
-                   toast.info("Could not redirect to WhatsApp: No expert number provided.");
+                    toast.info("Could not redirect to WhatsApp — no expert number configured.");
                 }
             } else {
                 toast.error(data.error || "Booking failed. Please try again.");
             }
         } catch (err) {
-            toast.error("Booking failed. Please try again.");
+            toast.error("Booking failed. Please check your connection and try again.");
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    // Strict button visibility: booked → hide all; pending/reserved → show locked status; else → show CTA
     const renderBookingButton = (className?: string) => {
-        const isReserved = q.bookingStatus === 'reserved' || booking?.status === 'reserved';
-
         if (isBooked) {
-            return null;
+            return (
+                <div className={`${className} flex items-center gap-2 bg-green-500 text-white rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest cursor-default`}>
+                    <CheckCircle2 size={14} />
+                    Booking Confirmed
+                </div>
+            );
         }
 
         if (isReserved) {
             return (
                 <Button 
                     disabled
-                    className={`${className} flex items-center gap-2 bg-blue-500 hover:bg-blue-500 cursor-not-allowed`}
+                    className={`${className} flex items-center gap-2 bg-blue-500 hover:bg-blue-500 cursor-not-allowed opacity-80`}
                 >
                     <Check size={14} />
                     Reserved
@@ -130,7 +168,7 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
             return (
                 <Button 
                     disabled
-                    className={`${className} flex items-center gap-2 bg-yellow-500 hover:bg-yellow-500 cursor-not-allowed`}
+                    className={`${className} flex items-center gap-2 bg-yellow-500 hover:bg-yellow-500 cursor-not-allowed opacity-80`}
                 >
                     <Loader2 size={14} className="animate-spin" />
                     Booking Requested
@@ -141,6 +179,7 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
         return (
             <Button 
                 onClick={() => setIsBookingModalOpen(true)}
+                disabled={isSubmitting}
                 className={className}
             >
                 Confirm Booking
@@ -166,17 +205,23 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                 }
             `}</style>
 
-            {/* Booked / Pending Banner */}
+            {/* Status Banner — driven by liveStatus for instant UI sync */}
             {isBooked && (
                 <div className="bg-green-500 text-white w-full text-center py-3 px-4 font-black uppercase tracking-[0.2em] text-xs md:text-sm shadow-md z-[200] relative">
                     <CheckCircle2 size={16} className="inline mr-2 -mt-1" />
-                    This trip is already booked
+                    Booking Confirmed — This trip is booked!
                 </div>
             )}
-            {isPending && !isBooked && (
+            {isReserved && !isBooked && (
+                <div className="bg-blue-500 text-white w-full text-center py-3 px-4 font-black uppercase tracking-[0.2em] text-xs md:text-sm shadow-md z-[200] relative">
+                    <Check size={16} className="inline mr-2 -mt-1" />
+                    Trip Reserved — Awaiting Confirmation
+                </div>
+            )}
+            {isPending && !isBooked && !isReserved && (
                 <div className="bg-yellow-500 text-white w-full text-center py-3 px-4 font-black uppercase tracking-[0.2em] text-xs md:text-sm shadow-md z-[200] relative">
                     <Loader2 size={16} className="inline mr-2 -mt-1 animate-spin" />
-                    Booking Requested / Pending Inquiry
+                    Booking Requested — Our expert will reach out shortly!
                 </div>
             )}
 
@@ -189,13 +234,14 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                         ) : (
                             <h2 className="text-lg md:text-xl font-black tracking-tighter text-gray-900 uppercase">YOUTHCAMPING</h2>
                         )}
-                        <div className={`hidden sm:flex px-3 py-1 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest text-white shadow-sm ${
-                            q.bookingStatus === 'booked' ? 'bg-green-500' :
-                            q.bookingStatus === 'reserved' ? 'bg-blue-500' :
-                            q.bookingStatus === 'pending' ? 'bg-yellow-500' :
-                            q.bookingStatus === 'cancelled' ? 'bg-red-500' : 'bg-orange-400'
+                        {/* Status pill reads liveStatus — updates immediately after booking */}
+                        <div className={`hidden sm:flex px-3 py-1 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest text-white shadow-sm transition-colors duration-500 ${
+                            liveStatus === 'booked'   ? 'bg-green-500'  :
+                            liveStatus === 'reserved' ? 'bg-blue-500'   :
+                            liveStatus === 'pending'  ? 'bg-yellow-500' :
+                            liveStatus === 'cancelled'? 'bg-red-500'    : 'bg-orange-400'
                         }`}>
-                            {q.bookingStatus || 'pending'}
+                            {liveStatus}
                         </div>
                     </div>
                     
