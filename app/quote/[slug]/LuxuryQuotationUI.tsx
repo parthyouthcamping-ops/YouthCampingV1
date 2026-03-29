@@ -211,8 +211,56 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
 
     return (
         <div className="bg-white min-h-screen font-montserrat text-[#1a1a1a] selection:bg-primary/20 pdf-container overflow-x-hidden">
-            {/* Print Styles */}
+            {/* Global Styles + Glass System */}
             <style jsx global>{`
+                /* ── Glass token system ── */
+                :root {
+                    --glass-light: rgba(250, 248, 243, 0.55);
+                    --glass-dark:  rgba(18, 43, 30, 0.55);
+                    --glass-white: rgba(255, 255, 255, 0.10);
+                    --glass-blur:  blur(18px);
+                    --glass-border-light: rgba(255,255,255,0.22);
+                    --glass-border-dark:  rgba(255,255,255,0.10);
+                    --glass-shadow: 0 8px 32px rgba(0,0,0,0.22);
+                    --glass-shine: linear-gradient(120deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.04) 100%);
+                }
+
+                /* ── Glass mixins ── */
+                .glass-panel {
+                    background: var(--glass-light);
+                    backdrop-filter: var(--glass-blur);
+                    -webkit-backdrop-filter: var(--glass-blur);
+                    border: 1px solid var(--glass-border-light);
+                    box-shadow: var(--glass-shadow);
+                }
+                .glass-panel-dark {
+                    background: rgba(12, 28, 20, 0.62);
+                    backdrop-filter: var(--glass-blur);
+                    -webkit-backdrop-filter: var(--glass-blur);
+                    border: 1px solid var(--glass-border-dark);
+                    box-shadow: 0 8px 40px rgba(0,0,0,0.38);
+                }
+                .glass-shine::before {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background: var(--glass-shine);
+                    border-radius: inherit;
+                    pointer-events: none;
+                }
+
+                /* ── Subtle grain texture overlay ── */
+                .grain-overlay::after {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+                    pointer-events: none;
+                    border-radius: inherit;
+                    opacity: 0.5;
+                }
+
+                /* ── Print overrides ── */
                 @media print {
                     .no-print { display: none !important; }
                     .pdf-container { background: white !important; padding: 0 !important; color: black !important; }
@@ -221,7 +269,7 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                     header, footer { border: none !important; position: static !important; }
                     .pricing-card { position: static !important; width: 100% !important; border: 2px solid #eee !important; box-shadow: none !important; }
                     img { max-width: 100% !important; }
-                    .glass-card { background: white !important; border: 1px solid #eee !important; box-shadow: none !important; }
+                    .glass-card, .glass-panel, .glass-panel-dark { background: white !important; border: 1px solid #eee !important; box-shadow: none !important; }
                     .bg-primary { background-color: #f97316 !important; print-color-adjust: exact; }
                     .text-primary { color: #f97316 !important; print-color-adjust: exact; }
                 }
@@ -247,8 +295,15 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                 </div>
             )}
 
-            {/* Premium Branding Header */}
-            <header className="sticky top-0 left-0 right-0 z-[100] bg-white/90 backdrop-blur-md h-20 md:h-[90px] flex items-center transition-all duration-300 border-b border-gray-100 no-print">
+            {/* ── NAVBAR — Glass blur ── */}
+            <header className="sticky top-0 left-0 right-0 z-[100] h-20 md:h-[90px] flex items-center transition-all duration-300 no-print"
+                style={{
+                    background: 'rgba(255,255,255,0.82)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    borderBottom: '1px solid rgba(255,255,255,0.3)',
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.07)'
+                }}>
                 <div className="container mx-auto flex items-center justify-between px-4 md:px-6">
                     <div className="flex items-center gap-4">
                         {brand && brand.companyLogo ? (
@@ -266,15 +321,14 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                             {liveStatus}
                         </div>
                     </div>
-                    
                     <div className="flex items-center gap-3">
-                         {renderBookingButton("rounded-xl font-black uppercase text-[8px] md:text-[10px] tracking-widest shadow-xl shadow-primary/20 h-10 md:h-12 px-4 md:px-8")}
+                        {renderBookingButton("rounded-xl font-black uppercase text-[8px] md:text-[10px] tracking-widest shadow-xl shadow-primary/20 h-10 md:h-12 px-4 md:px-8")}
                     </div>
                 </div>
             </header>
 
             {/* ── HERO SECTION ── */}
-            <section className="relative h-screen min-h-[600px] flex flex-col justify-end overflow-hidden pdf-section">
+            <section className="relative h-screen min-h-[600px] flex flex-col justify-end overflow-hidden pdf-section grain-overlay">
                 {/* Background image with Ken Burns zoom */}
                 <motion.div
                     className="absolute inset-0"
@@ -291,20 +345,27 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                     />
                 </motion.div>
 
-                {/* Gradient overlays — top dark for readability, bottom heavy for content */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black/80" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+                {/* Cinematic gradient overlays */}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/15 to-black/75" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
 
-                {/* Hero Content */}
-                <div className="relative z-10 container mx-auto px-6 pb-16 md:pb-24">
+                {/* ── GLASS HERO INFO PANEL ── */}
+                <div className="relative z-10 container mx-auto px-4 md:px-6 pb-12 md:pb-20">
                     <motion.div
                         initial={{ opacity: 0, y: 32 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.9, ease: 'easeOut' }}
-                        className="max-w-5xl"
+                        className="relative max-w-3xl rounded-3xl p-7 md:p-10 glass-shine"
+                        style={{
+                            background: 'rgba(10, 10, 10, 0.42)',
+                            backdropFilter: 'blur(20px)',
+                            WebkitBackdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(255,255,255,0.14)',
+                            boxShadow: '0 12px 48px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
+                        }}
                     >
                         {/* Eyebrow */}
-                        <div className="flex items-center gap-3 mb-5">
+                        <div className="flex items-center gap-3 mb-4">
                             <span className="h-px w-8 bg-primary" />
                             <span className="text-primary font-black uppercase tracking-[0.4em] text-[10px] md:text-xs">
                                 Curated for {q.clientName}
@@ -312,37 +373,36 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                         </div>
 
                         {/* Trip name */}
-                        <h1 className="font-montserrat font-[900] text-white uppercase leading-[0.88] tracking-tighter mb-6
-                                       text-5xl sm:text-7xl md:text-8xl xl:text-[9rem] drop-shadow-2xl">
+                        <h1 className="font-montserrat font-[900] text-white uppercase leading-[0.88] tracking-tighter mb-4
+                                       text-4xl sm:text-6xl md:text-7xl drop-shadow-2xl">
                             {q.destination}
                         </h1>
 
                         {/* Tagline */}
-                        <p className="text-white/70 font-semibold text-base md:text-xl tracking-wide mb-8 max-w-xl">
+                        <p className="text-white/65 font-semibold text-sm md:text-base tracking-wide mb-7 max-w-lg">
                             An exclusive journey crafted around your vision of the perfect escape.
                         </p>
 
-                        {/* Metadata chips */}
-                        <div className="flex flex-wrap gap-3">
-                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
-                                <Clock size={13} className="text-white/70" />
-                                <span className="text-white font-bold text-xs uppercase tracking-widest">{q.duration}</span>
-                            </div>
-                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
-                                <Users size={13} className="text-white/70" />
-                                <span className="text-white font-bold text-xs uppercase tracking-widest">{q.pax} Travelers</span>
-                            </div>
-                            {q.travelDates?.from && (
-                                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
-                                    <Calendar size={13} className="text-white/70" />
-                                    <span className="text-white font-bold text-xs uppercase tracking-widest">
-                                        {new Date(q.travelDates.from).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                    </span>
+                        {/* Metadata glass chips */}
+                        <div className="flex flex-wrap gap-2">
+                            {[
+                                { icon: <Clock size={12} className="text-white/70" />, label: q.duration },
+                                { icon: <Users size={12} className="text-white/70" />, label: `${q.pax} Travelers` },
+                                ...(q.travelDates?.from ? [{ icon: <Calendar size={12} className="text-white/70" />, label: new Date(q.travelDates.from).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) }] : [])
+                            ].map((chip, i) => (
+                                <div key={i} className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5"
+                                    style={{
+                                        background: 'rgba(255,255,255,0.10)',
+                                        border: '1px solid rgba(255,255,255,0.18)',
+                                        backdropFilter: 'blur(8px)'
+                                    }}>
+                                    {chip.icon}
+                                    <span className="text-white font-bold text-[10px] uppercase tracking-widest">{chip.label}</span>
                                 </div>
-                            )}
-                            <div className="flex items-center gap-2 bg-primary/90 backdrop-blur-sm rounded-full px-4 py-2">
-                                <MapPin size={13} className="text-white" />
-                                <span className="text-white font-bold text-xs uppercase tracking-widest">{q.destination.split(',')[0]}</span>
+                            ))}
+                            <div className="flex items-center gap-1.5 bg-primary/90 rounded-full px-3.5 py-1.5">
+                                <MapPin size={12} className="text-white" />
+                                <span className="text-white font-bold text-[10px] uppercase tracking-widest">{q.destination.split(',')[0]}</span>
                             </div>
                         </div>
                     </motion.div>
@@ -365,11 +425,43 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                     </div>
                     <span className="text-white/40 text-[9px] font-bold uppercase tracking-widest" style={{ writingMode: 'vertical-rl' }}>Scroll</span>
                 </motion.div>
+
+                {/* ── Floating WhatsApp button ── */}
+                {q.expert?.whatsapp && (
+                    <motion.a
+                        href={`https://wa.me/${(q.expert.whatsapp).replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in the ${q.destination} trip.`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="fixed bottom-6 right-5 z-[150] no-print flex items-center gap-2 px-4 py-3 rounded-2xl text-white font-bold text-xs uppercase tracking-widest shadow-2xl transition-all duration-300 hover:scale-105"
+                        style={{
+                            background: 'rgba(37, 211, 102, 0.88)',
+                            backdropFilter: 'blur(12px)',
+                            WebkitBackdropFilter: 'blur(12px)',
+                            border: '1px solid rgba(255,255,255,0.25)',
+                            boxShadow: '0 8px 32px rgba(37,211,102,0.35), 0 2px 8px rgba(0,0,0,0.2)'
+                        }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 2, duration: 0.6 }}
+                    >
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                        </svg>
+                        Chat with Expert
+                    </motion.a>
+                )}
             </section>
 
-            {/* Quick Summary Grid */}
-            <section className="relative z-30 -mt-10 md:-mt-20 px-4 md:px-6 container mx-auto">
-                <GlassCard className="p-6 md:p-14 rounded-3xl md:rounded-[4rem] shadow-4xl bg-white border-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 glass-card">
+            {/* ── QUICK SUMMARY FLOATING GLASS CARD ── */}
+            <section className="relative z-30 -mt-16 md:-mt-24 px-4 md:px-6 container mx-auto">
+                <div className="p-6 md:p-12 rounded-3xl md:rounded-[3rem] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10 glass-shine relative"
+                    style={{
+                        background: 'rgba(255,255,255,0.88)',
+                        backdropFilter: 'blur(24px)',
+                        WebkitBackdropFilter: 'blur(24px)',
+                        border: '1px solid rgba(255,255,255,0.6)',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)'
+                    }}>
                     <div className="flex items-center gap-6 border-b sm:border-b-0 sm:border-r border-gray-100 pb-6 sm:pb-0 sm:pr-6 last:border-0 last:pr-0">
                         <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/5 rounded-2xl flex items-center justify-center text-primary shrink-0">
                             <Users size={24} className="md:w-[30px] md:h-[30px]" />
@@ -421,7 +513,7 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                             </p>
                         </div>
                     </div>
-                </GlassCard>
+                </div>
             </section>
 
             {/* Professional Introduction */}
@@ -638,18 +730,26 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                                 Join thousands who have experienced the Youthcamping difference. We prioritize your comfort and experiences above all else.
                             </p>
                         </div>
-                        <div className="flex-1 grid grid-cols-1 gap-5">
+                        <div className="flex-1 grid grid-cols-1 gap-4">
                             {[
                                 { name: "Rahul S.", review: "Youthcamping made our Bali trip absolutely seamless. The luxury villas were breathtaking!", rating: 5 },
                                 { name: "Priya M.", review: "Best travel coordinators ever. The attention to detail in our Vietnam itinerary was unmatched.", rating: 5 }
                             ].map((testi, i) => (
-                                <GlassCard key={i} className="p-7 rounded-2xl border border-gray-100">
+                                /* ── Glass testimonial card ── */
+                                <div key={i} className="p-6 rounded-2xl glass-shine relative"
+                                    style={{
+                                        background: 'rgba(250, 248, 243, 0.60)',
+                                        backdropFilter: 'blur(12px)',
+                                        WebkitBackdropFilter: 'blur(12px)',
+                                        border: '1px solid rgba(255,255,255,0.55)',
+                                        boxShadow: '0 4px 20px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8)'
+                                    }}>
                                     <div className="flex items-center gap-0.5 text-primary mb-3">
                                         {[...Array(testi.rating)].map((_, s) => <Star key={s} size={13} fill="currentColor" />)}
                                     </div>
                                     <p className="text-sm md:text-base text-gray-600 font-medium mb-3">&ldquo;{testi.review}&rdquo;</p>
                                     <p className="text-xs font-black text-gray-900 uppercase tracking-widest">{testi.name} — Verified Traveler</p>
-                                </GlassCard>
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -684,29 +784,38 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                                 ))}
                             </div>
                         </div>
-                        <GlassCard className="p-8 md:p-12 rounded-3xl md:rounded-[3rem] bg-gray-900 text-white border-none shadow-xl self-start">
-                            <div className="space-y-7">
-                                <div className="space-y-1 border-b border-white/10 pb-5">
+                        {/* ── GLASS PRICE CTA CARD ── */}
+                        <div className="rounded-3xl md:rounded-[2.5rem] text-white self-start overflow-hidden relative glass-shine"
+                            style={{
+                                background: 'rgba(12, 28, 20, 0.78)',
+                                backdropFilter: 'blur(20px)',
+                                WebkitBackdropFilter: 'blur(20px)',
+                                border: '1px solid rgba(255,255,255,0.10)',
+                                boxShadow: '0 24px 64px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)'
+                            }}>
+                            {/* Gold accent bar */}
+                            <div className="h-1 w-full bg-gradient-to-r from-primary via-amber-400 to-primary opacity-80" />
+                            <div className="p-8 md:p-12 space-y-7">
+                                <div className="space-y-1 border-b pb-5" style={{ borderColor: 'rgba(255,255,255,0.10)' }}>
                                     <h4 className="text-xl font-black text-primary uppercase">Payment Policy</h4>
-                                    <p className="text-xs text-white/40 font-bold uppercase tracking-widest">Transparent pricing, always</p>
+                                    <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.35)' }}>Transparent pricing, always</p>
                                 </div>
                                 <div className="space-y-5">
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="text-white/60 font-medium">Booking Amount</span>
-                                        <span className="font-black text-primary">₹10,000 / Person</span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="text-white/60 font-medium">Confirmation</span>
-                                        <span className="font-black text-white uppercase">Instant</span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="text-white/60 font-medium">Cancellation</span>
-                                        <span className="font-black text-white">Full Refund (T&C)</span>
-                                    </div>
+                                    {[
+                                        { label: 'Booking Amount', value: '₹10,000 / Person', highlight: true },
+                                        { label: 'Confirmation', value: 'Instant', highlight: false },
+                                        { label: 'Cancellation', value: 'Full Refund (T&C)', highlight: false },
+                                    ].map((row, i) => (
+                                        <div key={i} className="flex justify-between items-center text-sm py-1"
+                                            style={{ borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.06)' : 'none', paddingBottom: i < 2 ? '1.25rem' : 0 }}>
+                                            <span className="font-medium" style={{ color: 'rgba(255,255,255,0.55)' }}>{row.label}</span>
+                                            <span className={`font-black uppercase ${row.highlight ? 'text-primary' : 'text-white'}`}>{row.value}</span>
+                                        </div>
+                                    ))}
                                 </div>
-                                {renderBookingButton("w-full bg-primary text-white hover:bg-white hover:text-gray-900 py-6 rounded-2xl font-black uppercase tracking-widest transition-all")}
+                                {renderBookingButton("w-full bg-primary text-white hover:bg-white hover:text-gray-900 py-6 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/30")}
                             </div>
-                        </GlassCard>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -726,7 +835,14 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative bg-white rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl"
+                            className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] glass-shine"
+                            style={{
+                                background: 'rgba(252, 250, 247, 0.92)',
+                                backdropFilter: 'blur(28px)',
+                                WebkitBackdropFilter: 'blur(28px)',
+                                border: '1px solid rgba(255,255,255,0.6)',
+                                boxShadow: '0 32px 80px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,1)'
+                            }}
                         >
                             <div className="p-8 md:p-12 space-y-8">
                                 <div className="space-y-2 text-center">
@@ -814,45 +930,63 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                 )}
             </AnimatePresence>
 
-            {/* Logistics & Expertise */}
-            <section className="py-16 md:py-24 bg-gray-900 text-white rounded-3xl md:rounded-[3.5rem] mx-4 md:mx-6 mb-16 md:mb-24 p-8 md:p-16 pdf-section">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center text-center lg:text-left">
-                    <div className="space-y-6 md:space-y-8 order-2 lg:order-1">
-                        <div className="space-y-2 md:space-y-3">
-                            <div className="flex items-center gap-3 justify-center lg:justify-start">
-                                <span className="h-px w-6 bg-primary" />
-                                <span className="text-primary font-black uppercase tracking-[0.4em] text-[10px]">Your Expert</span>
+            {/* ── EXPERT SECTION — Glass dark ── */}
+            <section className="mx-4 md:mx-6 mb-16 md:mb-24 rounded-3xl md:rounded-[3.5rem] overflow-hidden relative pdf-section"
+                style={{
+                    background: 'rgba(8, 22, 14, 0.90)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    boxShadow: '0 32px 80px rgba(0,0,0,0.4)'
+                }}>
+                {/* Subtle green ambient glow */}
+                <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 50% at 80% 50%, rgba(249,115,22,0.06) 0%, transparent 70%)' }} />
+                <div className="p-8 md:p-16">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center text-center lg:text-left text-white">
+                        <div className="space-y-6 md:space-y-8 order-2 lg:order-1">
+                            <div className="space-y-2 md:space-y-3">
+                                <div className="flex items-center gap-3 justify-center lg:justify-start">
+                                    <span className="h-px w-6 bg-primary" />
+                                    <span className="text-primary font-black uppercase tracking-[0.4em] text-[10px]">Your Expert</span>
+                                </div>
+                                <h3 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9]">
+                                    Guided by<br /><span className="text-primary">{q.expert?.name}</span>
+                                </h3>
+                                <p className="text-sm md:text-base font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>{q.expert?.designation || 'Your Destination Host'}</p>
                             </div>
-                            <h3 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9]">
-                                Guided by<br /><span className="text-primary">{q.expert?.name}</span>
-                            </h3>
-                            <p className="text-gray-400 text-sm md:text-base font-medium">{q.expert?.designation || 'Your Destination Host'}</p>
+                            <Button
+                                onClick={() => window.open(`https://wa.me/${(q.expert?.whatsapp || '').replace(/[^0-9]/g, '')}`, '_blank')}
+                                className="w-full sm:w-auto bg-white text-gray-900 rounded-2xl px-8 py-5 text-sm font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all no-print"
+                            >
+                                Connect on WhatsApp
+                            </Button>
                         </div>
-                        <Button
-                            onClick={() => window.open(`https://wa.me/${(q.expert?.whatsapp || '').replace(/[^0-9]/g, '')}`, '_blank')}
-                            className="w-full sm:w-auto bg-white text-gray-900 rounded-2xl px-8 py-5 text-sm font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all no-print"
-                        >
-                            Connect on WhatsApp
-                        </Button>
-                    </div>
-                    <div className="flex flex-col items-center gap-5 order-1 lg:order-2">
-                        <img
-                            src={q.expert?.photo}
-                            loading="lazy"
-                            decoding="async"
-                            className="w-36 h-36 md:w-56 md:h-56 rounded-3xl object-cover ring-4 ring-white/10 shadow-2xl bg-white/5"
-                            alt={q.expert?.name || 'Expert'}
-                        />
-                        <div className="text-center space-y-1">
-                            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Certified Expert</p>
-                            <p className="text-base md:text-xl font-bold">Specializing in {q.destination.split(',')[0]}</p>
+                        <div className="flex flex-col items-center gap-5 order-1 lg:order-2">
+                            {/* ── Glass expert photo frame ── */}
+                            <div className="relative p-1.5 rounded-3xl"
+                                style={{
+                                    background: 'linear-gradient(135deg, rgba(249,115,22,0.5), rgba(255,255,255,0.08) 50%, rgba(249,115,22,0.2))',
+                                    boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)'
+                                }}>
+                                <img
+                                    src={q.expert?.photo}
+                                    loading="lazy"
+                                    decoding="async"
+                                    className="w-36 h-36 md:w-56 md:h-56 rounded-[1.4rem] object-cover"
+                                    alt={q.expert?.name || 'Expert'}
+                                />
+                            </div>
+                            <div className="text-center space-y-1">
+                                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Certified Expert</p>
+                                <p className="text-base md:text-xl font-bold text-white">Specializing in {q.destination.split(',')[0]}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* Simplified Footer */}
-            <footer className="py-20 border-t border-gray-100 text-center space-y-8">
+            <footer className="py-20 border-t text-center space-y-8" style={{ borderColor: 'rgba(0,0,0,0.06)' }}>
                 <div className="flex flex-col items-center gap-4">
                     <h2 className="text-3xl font-black tracking-tighter text-gray-900 uppercase">YouthCamping</h2>
                     <p className="text-[10px] font-black uppercase tracking-[0.6em] text-gray-400">Luxury Travel Reimagined</p>
@@ -866,6 +1000,18 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                     &copy; {new Date().getFullYear()} YouthCamping Global Luxury Travel. All Rights Reserved.
                 </p>
             </footer>
+
+            {/* ── Sticky Mobile Booking CTA ── */}
+            <div className="fixed bottom-0 left-0 right-0 z-[140] md:hidden no-print px-4 pb-4"
+                style={{ 
+                    background: 'linear-gradient(to top, rgba(255,255,255,0.95) 60%, transparent)',
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)'
+                }}>
+                <div className="pt-4">
+                    {renderBookingButton("w-full rounded-2xl font-black uppercase text-sm tracking-widest h-14 shadow-2xl shadow-primary/25")}
+                </div>
+            </div>
         </div>
     );
 }
