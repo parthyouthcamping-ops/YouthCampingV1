@@ -50,6 +50,21 @@ function ActivityIcon({ label }: { label: string }) {
     return <Sparkles size={14} className="shrink-0 text-primary" />;
 }
 
+
+// Icon helper for Journey Stops
+function StopIcon({ type, icon }: { type: string, icon?: string }) {
+    const t = type.toLowerCase();
+    const i = icon?.toLowerCase();
+    
+    if (t === 'arrival' || i === 'plane' || i === 'airport') return <Sparkles size={18} className="text-amber-400" fill="currentColor" />; // Use Sparkles as a premium substitute
+    if (t === 'departure' || i === 'departure') return <MapPin size={18} className="text-primary" />;
+    if (t === 'stay' || i === 'hotel' || i === 'building') return <HotelIcon size={18} className="text-primary" />;
+    if (i === 'drive' || i === 'car') return <Car size={18} className="text-primary" />;
+    if (i === 'boat' || i === 'ship') return <Compass size={18} className="text-primary" />;
+    
+    return <Sparkles size={18} className="text-primary" />;
+}
+
 interface LuxuryQuotationUIProps {
     q: Quotation;
 }
@@ -57,6 +72,7 @@ interface LuxuryQuotationUIProps {
 export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
     const { brand } = useBrandSettings();
     const [selectedTier, setSelectedTier] = useState<'standard' | 'luxury'>('standard');
+    const [expandedDay, setExpandedDay] = useState<number | null>(1);
     const [booking, setBooking] = useState<any>(null);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,8 +91,16 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
     const isReserved = liveStatus === 'reserved';
     const isPending  = liveStatus === 'pending';
 
-    const { scrollY } = useScroll();
-    const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+    const { scrollYProgress } = useScroll();
+    const [scrolled, setScrolled] = useState(false);
+    
+    useEffect(() => {
+        const handleScroll = () => setScrolled(window.scrollY > 50);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
 
     useEffect(() => {
         fetchBooking();
@@ -210,7 +234,17 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
     };
 
     return (
-        <div className="bg-white min-h-screen font-montserrat text-[#1a1a1a] selection:bg-primary/20 pdf-container overflow-x-hidden">
+        <div className="min-h-screen bg-white font-sans selection:bg-primary/20">
+            {/* ── CINEMATIC FLOATING PROGRESS INDICATOR ── */}
+            <motion.div 
+                className="fixed top-0 left-0 right-0 h-1.5 bg-primary/20 z-[200] origin-left"
+                style={{ scaleX: scrollYProgress }}
+            />
+            <motion.div 
+                className="fixed top-0 left-0 right-0 h-1.5 bg-primary z-[201] origin-left shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)]"
+                style={{ scaleX: scrollYProgress }}
+            />
+            <div className="pdf-container overflow-x-hidden">
             {/* Global Styles + Glass System */}
             <style jsx global>{`
                 /* ── Glass token system ── */
@@ -332,9 +366,9 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                 {/* Background image with Ken Burns zoom */}
                 <motion.div
                     className="absolute inset-0"
-                    initial={{ scale: 1.08 }}
+                    initial={{ scale: 1.25 }}
                     animate={{ scale: 1 }}
-                    transition={{ duration: 8, ease: 'easeOut' }}
+                    transition={{ duration: 20, ease: 'linear' }}
                 >
                     <img
                         src={q.heroImage || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop&fm=webp'}
@@ -350,59 +384,72 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
 
                 {/* ── GLASS HERO INFO PANEL ── */}
-                <div className="relative z-10 container mx-auto px-4 md:px-6 pb-12 md:pb-20">
+                <div className="relative z-10 container mx-auto px-4 md:px-6 pb-12 md:pb-24">
                     <motion.div
-                        initial={{ opacity: 0, y: 32 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.9, ease: 'easeOut' }}
-                        className="relative max-w-3xl rounded-3xl p-7 md:p-10 glass-shine"
-                        style={{
-                            background: 'rgba(10, 10, 10, 0.42)',
-                            backdropFilter: 'blur(20px)',
-                            WebkitBackdropFilter: 'blur(20px)',
-                            border: '1px solid rgba(255,255,255,0.14)',
-                            boxShadow: '0 12px 48px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
-                        }}
+                        initial={{ opacity: 0, x: -50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
+                        className="relative max-w-4xl p-8 md:p-14 overflow-hidden"
                     >
-                        {/* Eyebrow */}
-                        <div className="flex items-center gap-3 mb-4">
-                            <span className="h-px w-8 bg-primary" />
-                            <span className="text-primary font-black uppercase tracking-[0.4em] text-[10px] md:text-xs">
-                                Curated for {q.clientName}
-                            </span>
-                        </div>
+                        {/* Glass background with shine */}
+                        <div className="absolute inset-0 rounded-[2.5rem] bg-[#0a0a0a]/40 backdrop-blur-2xl border border-white/15 shadow-2xl overflow-hidden glass-shine" />
+                        
+                        <div className="relative z-10">
+                            {/* Badges */}
+                            <div className="flex flex-wrap gap-2 mb-8">
+                                <span className="px-5 py-1.5 rounded-full bg-amber-400 text-[#0a0a0a] font-black uppercase text-[10px] tracking-widest shadow-xl shadow-amber-400/20">
+                                    Best Seller
+                                </span>
+                                <span className="px-5 py-1.5 rounded-full bg-white/10 backdrop-blur-xl text-white font-black uppercase text-[10px] tracking-widest border border-white/10">
+                                    Trending
+                                </span>
+                                <span className="px-5 py-1.5 rounded-full bg-white/10 backdrop-blur-xl text-white font-black uppercase text-[10px] tracking-widest border border-white/10">
+                                    Limited Slots
+                                </span>
+                            </div>
 
-                        {/* Trip name */}
-                        <h1 className="font-montserrat font-[900] text-white uppercase leading-[0.88] tracking-tighter mb-4
-                                       text-4xl sm:text-6xl md:text-7xl drop-shadow-2xl">
-                            {q.destination}
-                        </h1>
+                            {/* Eyebrow */}
+                            <div className="flex items-center gap-3 mb-6">
+                                <motion.div 
+                                    initial={{ width: 0 }}
+                                    animate={{ width: 32 }}
+                                    transition={{ delay: 1, duration: 0.8 }}
+                                    className="h-px bg-primary" 
+                                />
+                                <span className="text-primary font-black uppercase tracking-[0.5em] text-[10px] md:text-sm">
+                                    Curated for {q.clientName}
+                                </span>
+                            </div>
 
-                        {/* Tagline */}
-                        <p className="text-white/65 font-semibold text-sm md:text-base tracking-wide mb-7 max-w-lg">
-                            An exclusive journey crafted around your vision of the perfect escape.
-                        </p>
+                            {/* Trip name */}
+                            <h1 className={`font-montserrat font-[900] text-white uppercase leading-[0.88] tracking-tighter mb-8
+                                           text-5xl sm:text-7xl md:text-9xl drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]`}>
+                                {q.destination}
+                            </h1>
 
-                        {/* Metadata glass chips */}
-                        <div className="flex flex-wrap gap-2">
-                            {[
-                                { icon: <Clock size={12} className="text-white/70" />, label: q.duration },
-                                { icon: <Users size={12} className="text-white/70" />, label: `${q.pax} Travelers` },
-                                ...(q.travelDates?.from ? [{ icon: <Calendar size={12} className="text-white/70" />, label: new Date(q.travelDates.from).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) }] : [])
-                            ].map((chip, i) => (
-                                <div key={i} className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5"
-                                    style={{
-                                        background: 'rgba(255,255,255,0.10)',
-                                        border: '1px solid rgba(255,255,255,0.18)',
-                                        backdropFilter: 'blur(8px)'
-                                    }}>
-                                    {chip.icon}
-                                    <span className="text-white font-bold text-[10px] uppercase tracking-widest">{chip.label}</span>
+                            {/* Tagline */}
+                            <p className="text-white/70 font-medium text-base md:text-xl tracking-wide mb-10 max-w-2xl leading-relaxed">
+                                An exclusive {q.duration} masterpiece crafted around your vision of the perfect escape.
+                            </p>
+
+                            {/* Meta row + Rating */}
+                            <div className="flex flex-wrap items-center gap-8 md:gap-12 pt-6 border-t border-white/10">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex text-amber-400">
+                                        {[1,2,3,4,5].map(s => <Star key={s} size={16} fill="currentColor" />)}
+                                    </div>
+                                    <span className="text-white font-black text-xs tracking-widest uppercase">4.9/5 (120+ REVIEWS)</span>
                                 </div>
-                            ))}
-                            <div className="flex items-center gap-1.5 bg-primary/90 rounded-full px-3.5 py-1.5">
-                                <MapPin size={12} className="text-white" />
-                                <span className="text-white font-bold text-[10px] uppercase tracking-widest">{q.destination.split(',')[0]}</span>
+                                <div className="flex items-center gap-4 text-white/50">
+                                    <div className="flex items-center gap-2">
+                                        <Clock size={16} className="text-primary" />
+                                        <span className="font-bold text-xs uppercase tracking-widest text-white">{q.duration}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Users size={16} className="text-primary" />
+                                        <span className="font-bold text-xs uppercase tracking-widest text-white">{q.pax} Travelers</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </motion.div>
@@ -551,6 +598,135 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                 </div>
             </section>
 
+            {/* ── THE ROAD AHEAD — Journey Map ── */}
+            {q.journeyMap && (
+                <section className="py-20 md:py-32 container mx-auto px-4 md:px-6 pdf-section overflow-hidden">
+                    <div className="max-w-6xl mx-auto space-y-16 md:space-y-24">
+                        
+                        {/* Summary Tiles */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                            {q.journeyMap.summaryTiles.map((tile, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.8, delay: i * 0.1 }}
+                                    className="p-6 md:p-8 rounded-3xl bg-white border border-gray-100 shadow-xl shadow-gray-200/20 flex flex-col items-center text-center gap-4 group hover:border-primary/20 transition-all cursor-default"
+                                >
+                                    <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/5 rounded-2xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500">
+                                        {tile.icon === 'map' && <MapPin size={24} className="md:w-8 md:h-8" />}
+                                        {tile.icon === 'clock' && <Clock size={24} className="md:w-8 md:h-8" />}
+                                        {tile.icon === 'compass' && <Compass size={24} className="md:w-8 md:h-8" />}
+                                        {tile.icon === 'calendar' && <Calendar size={24} className="md:w-8 md:h-8" />}
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-1">{tile.label}</p>
+                                        <p className="text-lg md:text-xl font-black text-gray-900 tracking-tight">{tile.value}</p>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Journey Timeline */}
+                        <div className="relative group">
+                            {/* Decorative Background Labels */}
+                            <div className="absolute -top-10 -left-10 text-[10rem] font-black text-gray-100 select-none opacity-50 z-0">MAP</div>
+                            
+                            <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-10">
+                                <div className="md:col-span-5 space-y-8">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-3">
+                                            <span className="h-px w-8 bg-primary" />
+                                            <span className="text-primary font-black uppercase tracking-[0.4em] text-[10px]">Route Map</span>
+                                        </div>
+                                        <h2 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter text-gray-900 leading-[0.9] uppercase">
+                                            The <span className="text-primary">Road</span> Ahead
+                                        </h2>
+                                    </div>
+                                    <p className="text-sm md:text-base text-gray-500 leading-relaxed font-medium max-w-sm">
+                                        From your arrival to the final farewell, we’ve mapped out a seamless flow of experiences across the region’s most iconic landscapes.
+                                    </p>
+                                    
+                                    {/* Legend / Mini Stat */}
+                                    <div className="p-6 rounded-3xl bg-[#0a0a0a] text-white space-y-4 shadow-2xl relative overflow-hidden group/legend">
+                                        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover/legend:opacity-100 transition-opacity" />
+                                        <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-white/40 border-b border-white/10 pb-4 relative z-10">
+                                            <span>Full Route Overview</span>
+                                            <span className="text-primary">{q.journeyMap.stops.length} Milestones</span>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white shrink-0">
+                                                <Compass className="animate-pulse" />
+                                            </div>
+                                            <div>
+                                                <p className="font-black uppercase tracking-tight text-white leading-none">Starting Point</p>
+                                                <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">{q.journeyMap.stops[0]?.name}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Vertical Timeline Divider with Draw Effect */}
+                                <div className="md:col-span-1 border-r border-dashed border-gray-100 hidden md:block relative">
+                                    <motion.div 
+                                        initial={{ height: 0 }}
+                                        whileInView={{ height: '100%' }}
+                                        viewport={{ once: true }}
+                                        transition={{ duration: 1.5, ease: "easeInOut" }}
+                                        className="absolute top-0 bottom-0 left-full w-[2px] bg-gradient-to-b from-primary via-primary/40 to-transparent origin-top" 
+                                    />
+                                </div>
+
+                                <div className="md:col-span-6 space-y-12 relative">
+                                    {q.journeyMap.stops.map((stop, i) => (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ opacity: 0, x: 30 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ duration: 0.6, delay: i * 0.1 }}
+                                            className="relative flex items-center gap-8 group/stop"
+                                        >
+                                            {/* Stop Marker */}
+                                            <div className="relative shrink-0">
+                                                <div className="w-14 h-14 rounded-full bg-white border border-gray-100 shadow-xl flex items-center justify-center relative z-10 group-hover/stop:border-primary transition-all duration-500">
+                                                    <StopIcon type={stop.type} icon={stop.icon} />
+                                                </div>
+                                                {i < q.journeyMap.stops.length - 1 && (
+                                                    <div className="absolute top-14 left-7 w-px h-12 bg-gray-100 group-hover/stop:bg-primary/20 transition-colors" />
+                                                )}
+                                            </div>
+
+                                            {/* Stop Content */}
+                                            <div className="flex-1 pb-4">
+                                                <div className="flex items-center gap-3 mb-1">
+                                                    <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">Day {stop.day}</span>
+                                                    <span className="h-px w-3 bg-gray-100" />
+                                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{stop.type}</span>
+                                                    {stop.driveTime && (
+                                                        <>
+                                                            <span className="h-px w-3 bg-gray-100" />
+                                                            <div className="flex items-center gap-1">
+                                                                <Clock size={10} className="text-gray-300" />
+                                                                <span className="text-[9px] font-bold text-gray-400">{stop.driveTime}</span>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                                <h4 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight uppercase group-hover/stop:text-primary transition-colors">
+                                                    {stop.name}
+                                                </h4>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            )}
+
             {/* ── ITINERARY SECTION ── */}
             <section className="py-16 md:py-28 bg-[#f9f9f7] pdf-section" id="itinerary">
                 <div className="container mx-auto px-4 md:px-6">
@@ -569,95 +745,136 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                         </p>
                     </div>
 
-                    {/* Day cards */}
-                    <div className="space-y-8 md:space-y-10">
+                    {/* Day cards — Accordion Style */}
+                    <div className="flex flex-col gap-6 max-w-5xl mx-auto">
                         {q.itinerary?.map((day, idx) => {
+                            const isOpen = expandedDay === day.day;
                             const dayLabel = getDayDate(q.travelDates?.from, idx);
+                            
                             return (
                                 <motion.div
-                                    key={idx}
-                                    initial={{ opacity: 0, y: 24 }}
+                                    key={day.id || idx}
+                                    layout
+                                    initial={{ opacity: 0, y: 20 }}
                                     whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true, margin: '-60px' }}
-                                    transition={{ duration: 0.5, delay: 0.05 }}
-                                    className="itinerary-item bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden"
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+                                    className={`group relative rounded-[2.5rem] transition-all duration-700 ${
+                                        isOpen 
+                                        ? 'bg-white shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] border-primary/20 scale-[1.01]' 
+                                        : 'bg-white/50 hover:bg-white border-transparent hover:shadow-2xl hover:-translate-y-1'
+                                    } border-2 overflow-hidden`}
                                 >
-                                    <div className={`flex flex-col ${idx % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} min-h-[420px]`}>
+                                    {/* --- CARD HEADER (CLOSED STATE) --- */}
+                                    <button
+                                        onClick={() => {
+                                            setExpandedDay(isOpen ? null : day.day);
+                                            if (!isOpen) {
+                                                setTimeout(() => {
+                                                    document.getElementById(`day-card-${day.day}`)?.scrollIntoView({ 
+                                                        behavior: 'smooth', 
+                                                        block: 'center' 
+                                                    });
+                                                }, 300);
+                                            }
+                                        }}
+                                        id={`day-card-${day.day}`}
+                                        className="w-full text-left p-6 md:p-8 flex items-center justify-between gap-6"
+                                    >
+                                        <div className="flex items-center gap-6 md:gap-8 flex-1">
+                                            {/* Day Number Box */}
+                                            <div className={`w-14 h-14 md:w-16 md:h-16 rounded-2xl flex flex-col items-center justify-center shrink-0 transition-colors duration-500 ${
+                                                isOpen ? 'bg-primary text-white' : 'bg-gray-100 text-gray-400'
+                                            }`}>
+                                                <span className="text-[10px] font-black uppercase tracking-tighter leading-none">Day</span>
+                                                <span className="text-xl md:text-2xl font-black italic leading-none mt-1">{day.day < 10 ? `0${day.day}` : day.day}</span>
+                                            </div>
 
-                                        {/* Photo slider — full height on desktop */}
-                                        <div className="w-full lg:w-[46%] shrink-0">
-                                            <ImageSlider
-                                                images={day.photos}
-                                                className="h-64 sm:h-80 lg:h-full rounded-none"
-                                            />
-                                        </div>
-
-                                        {/* Content */}
-                                        <div className="flex-1 p-7 md:p-10 lg:p-12 flex flex-col justify-between gap-6">
-
-                                            {/* Day badge + date + title */}
-                                            <div className="space-y-3">
-                                                <div className="flex items-center gap-3 flex-wrap">
-                                                    <span className="inline-flex items-center gap-2 bg-primary text-white font-black uppercase text-[10px] tracking-[0.2em] px-4 py-1.5 rounded-full">
-                                                        Day {day.day < 10 ? `0${day.day}` : day.day}
-                                                    </span>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-3 mb-1">
                                                     {dayLabel && (
-                                                        <span className="flex items-center gap-1.5 text-gray-400 font-semibold text-xs uppercase tracking-widest">
-                                                            <Calendar size={11} />
+                                                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
                                                             {dayLabel}
                                                         </span>
                                                     )}
                                                 </div>
-
-                                                <h3 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-gray-900 uppercase leading-tight">
+                                                <h3 className={`text-lg md:text-2xl font-black tracking-tight uppercase transition-colors duration-500 ${
+                                                    isOpen ? 'text-gray-900' : 'text-gray-600'
+                                                }`}>
                                                     {day.title}
                                                 </h3>
-
-                                                {/* Stay + Meals chips */}
-                                                <div className="flex flex-wrap gap-2">
-                                                    {day.stay && (
-                                                        <span className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-500 font-bold text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-lg">
-                                                            <HotelIcon size={11} />
-                                                            {day.stay}
-                                                        </span>
-                                                    )}
-                                                    {day.meals && (
-                                                        <span className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-100 text-gray-500 font-bold text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-lg">
-                                                            <Utensils size={11} />
-                                                            {day.meals}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Description */}
-                                            <p className="text-sm md:text-base text-gray-500 font-medium leading-relaxed">
-                                                {day.description}
-                                            </p>
-
-                                            {/* Activities — icon-led bullet list */}
-                                            {day.activities && day.activities.length > 0 && (
-                                                <div className="space-y-2">
-                                                    <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">
-                                                        Highlights
-                                                    </h4>
-                                                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
-                                                        {day.activities.map((act, i) => (
-                                                            <li key={i} className="flex items-start gap-2">
-                                                                <ActivityIcon label={act} />
-                                                                <span className="text-xs md:text-[13px] font-bold text-gray-700 leading-snug">{act}</span>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-
-                                            {/* Day number accent */}
-                                            <div className="text-[5rem] md:text-[7rem] font-black text-gray-50 leading-none select-none mt-auto self-end">
-                                                {day.day < 10 ? `0${day.day}` : day.day}
                                             </div>
                                         </div>
-                                    </div>
+
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${
+                                            isOpen ? 'bg-primary border-primary text-white rotate-180' : 'border-gray-100 text-gray-300'
+                                        }`}>
+                                            <Compass size={18} />
+                                        </div>
+                                    </button>
+
+                                    {/* --- EXPANDED CONTENT --- */}
+                                    <AnimatePresence>
+                                        {isOpen && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+                                            >
+                                                <div className="p-6 md:p-8 pt-0 space-y-8">
+                                                    {/* Image Slider inside the card */}
+                                                    <div className="rounded-3xl overflow-hidden shadow-2xl relative aspect-video">
+                                                        <ImageSlider 
+                                                            images={day.photos || []} 
+                                                            className="w-full h-full"
+                                                        />
+                                                        <div className="absolute top-4 left-4 z-10">
+                                                            <div className="bg-black/40 backdrop-blur-md border border-white/20 px-4 py-2 rounded-xl flex items-center gap-2">
+                                                                <Camera size={14} className="text-white" />
+                                                                <span className="text-white font-black text-[10px] uppercase tracking-widest">
+                                                                    View Gallery
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                                                        <div className="lg:col-span-2 space-y-6">
+                                                            <div className="flex items-center gap-3">
+                                                                <Sparkles size={16} className="text-primary" />
+                                                                <h4 className="font-black uppercase tracking-[0.2em] text-xs text-gray-900">Experience Overview</h4>
+                                                            </div>
+                                                            <p className="text-gray-600 text-base md:text-lg leading-relaxed font-medium">
+                                                                {day.description}
+                                                            </p>
+                                                        </div>
+
+                                                        <div className="space-y-6">
+                                                            <div className="flex items-center gap-3">
+                                                                <MapPin size={16} className="text-primary" />
+                                                                <h4 className="font-black uppercase tracking-[0.2em] text-xs text-gray-900">What&apos;s Included</h4>
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {day.activities?.map((act, i) => (
+                                                                    <div key={i} className="flex items-center gap-2 bg-gray-50 border border-gray-100 px-4 py-2.5 rounded-xl group/chip hover:bg-primary/5 hover:border-primary/20 transition-all duration-300">
+                                                                        <ActivityIcon label={act} />
+                                                                        <span className="text-[11px] font-black text-gray-600 uppercase tracking-widest">{act}</span>
+                                                                    </div>
+                                                                ))}
+                                                                {day.meals && (
+                                                                    <div className="flex items-center gap-2 bg-primary/5 border border-primary/10 px-4 py-2.5 rounded-xl">
+                                                                        <Utensils size={14} className="text-primary" />
+                                                                        <span className="text-[11px] font-black text-primary uppercase tracking-widest">{day.meals}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </motion.div>
                             );
                         })}
@@ -1010,6 +1227,7 @@ export default function LuxuryQuotationUI({ q }: LuxuryQuotationUIProps) {
                 }}>
                 <div className="pt-4">
                     {renderBookingButton("w-full rounded-2xl font-black uppercase text-sm tracking-widest h-14 shadow-2xl shadow-primary/25")}
+                </div>
                 </div>
             </div>
         </div>

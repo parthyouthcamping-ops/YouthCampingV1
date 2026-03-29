@@ -30,7 +30,7 @@ Day-wise Itinerary:
   Day 3: ...
 
 Route Stops (in order):
-  [Stop Name] | [emoji icon] | [Day number] | [Stop type] | [Drive time to next stop]
+  [Stop Name] | [Day number] | [Type: e.g. Arrival/Stay] | [Icon name: plane/hotel/car] | [Drive time to next]
   ...
 
 FAQ:
@@ -171,12 +171,17 @@ function HeroPreview({ hero }: { hero: any }) {
 
 function StopPill({ stop }: { stop: any }) {
     return (
-        <div className="flex flex-col items-center gap-1.5 relative">
-            <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center text-lg">{stop.icon}</div>
+        <div className="flex flex-col items-center gap-1.5 relative shrink-0">
+            <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center text-lg uppercase font-black text-primary text-[10px]">
+                {stop.type?.slice(0, 3)}
+            </div>
             <span className="text-[9px] font-black uppercase tracking-wider text-gray-600 text-center max-w-[64px] leading-tight">{stop.name}</span>
-            {stop.driveTimeToNext && (
-                <span className="text-[8px] text-gray-400 font-bold">{stop.driveTimeToNext}</span>
-            )}
+            <div className="flex items-center gap-1">
+                <span className="text-[8px] text-primary font-black">Day {stop.day}</span>
+                {stop.driveTime && (
+                    <span className="text-[8px] text-gray-400 font-bold italic">({stop.driveTime})</span>
+                )}
+            </div>
         </div>
     );
 }
@@ -265,7 +270,8 @@ export default function AIGeneratorPage() {
                         </div>
                         <div>
                             <h1 className="text-2xl font-black text-gray-900 tracking-tight">AI Itinerary Generator</h1>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-0.5">Powered by Gemini 1.5 Flash</p>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-0.5">Powered by Gemini 2.5 Flash</p>
+
                         </div>
                     </div>
                 </div>
@@ -279,22 +285,37 @@ export default function AIGeneratorPage() {
                         >
                             <RotateCcw size={14} className="mr-2" /> Reset
                         </Button>
+
                         <Button
-                            variant="outline"
-                            onClick={handleDownload}
-                            className="rounded-2xl text-xs font-black uppercase tracking-widest border-gray-200"
+                            onClick={async () => {
+                                setIsLoading(true);
+                                try {
+                                    const res = await fetch("/api/ai/transform-proposal", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ itineraryJson: result }),
+                                    });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                        localStorage.setItem("pending_ai_quotation", JSON.stringify(data.data));
+                                        toast.success("🚀 Moving to Quotation Form...");
+                                        router.push("/admin/new");
+                                    } else {
+                                        toast.error("Mapping to form failed. Using raw data instead.");
+                                    }
+                                } catch (err) {
+                                    toast.error("Transform failed");
+                                } finally {
+                                    setIsLoading(false);
+                                }
+                            }}
+                            className="rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/30 h-11"
                         >
-                            <Download size={14} className="mr-2" /> Download JSON
-                        </Button>
-                        <Button
-                            onClick={handleCopyAll}
-                            className="rounded-2xl text-xs font-black uppercase tracking-widest"
-                        >
-                            {copiedAll ? <Check size={14} className="mr-2" /> : <Copy size={14} className="mr-2" />}
-                            {copiedAll ? "Copied!" : "Copy All JSON"}
+                            <Sparkles size={14} className="mr-2" /> Create Official Quote
                         </Button>
                     </div>
                 )}
+
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
@@ -412,13 +433,25 @@ export default function AIGeneratorPage() {
                     {error && !isLoading && (
                         <GlassCard className="p-8 rounded-3xl border border-red-100 bg-red-50/50 flex items-start gap-4">
                             <AlertCircle size={20} className="text-red-500 shrink-0 mt-0.5" />
-                            <div>
+                            <div className="flex-1">
                                 <p className="font-black text-red-700 text-sm">Generation Failed</p>
                                 <p className="text-red-500 text-xs font-medium mt-1">{error}</p>
-                                <p className="text-red-400 text-xs mt-2">Check your prompt has enough detail, or verify that <code className="bg-red-100 px-1 rounded">GEMINI_API_KEY</code> is configured in <code className="bg-red-100 px-1 rounded">.env.local</code></p>
+                                
+                                {/* ── Show detailed error if available from API ────────────────── */}
+                                {typeof error === 'string' && (
+                                    <pre className="mt-3 p-3 bg-red-100/50 rounded-xl text-[10px] text-red-600 font-mono whitespace-pre-wrap leading-tight border border-red-100 italic">
+                                        REASON: {error}
+                                    </pre>
+                                )}
+                                
+                                <p className="text-red-400 text-xs mt-4">
+                                    Check your prompt detail or verify your <code className="bg-red-100 px-1 rounded">GEMINI_API_KEY</code> in <code className="bg-red-100 px-1 rounded">.env.local</code>. 
+                                    Ensure the <strong>Generative Language API</strong> is enabled.
+                                </p>
                             </div>
                         </GlassCard>
                     )}
+
 
                     {/* Empty state */}
                     {!result && !isLoading && !error && (
@@ -474,7 +507,7 @@ export default function AIGeneratorPage() {
                                                     <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-gray-50">
                                                         {result.journeyMap.summaryTiles.map((tile: any, i: number) => (
                                                             <span key={i} className="flex items-center gap-1.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full">
-                                                                {tile.icon} {tile.label}: {tile.place}
+                                                                <Clock size={10} className="text-blue-400" /> {tile.label}: {tile.value}
                                                             </span>
                                                         ))}
                                                     </div>

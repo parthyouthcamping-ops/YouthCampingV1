@@ -25,10 +25,13 @@ import {
     FileText,
     Layers,
     Edit,
-    MessageCircle as WhatsAppIcon
+    MessageCircle as WhatsAppIcon,
+    Map as MapIcon,
+    RotateCcw,
+    Clock as ClockIcon
 } from "lucide-react";
 import { useBrandSettings } from "@/hooks/useBrandSettings";
-import { Quotation, Hotel, DayItinerary, CustomSection } from "@/lib/types";
+import { Quotation, Hotel as HotelType, DayItinerary, CustomSection, JourneyStop } from "@/lib/types";
 import { saveQuotation, generateSlug } from "@/lib/store";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { toast } from "sonner";
@@ -45,7 +48,7 @@ export default function QuotationForm({ initialData, isEdit = false }: Quotation
     const [isSaving, setIsSaving] = useState(false);
     const [uploadingField, setUploadingField] = useState<string | null>(null);
     const activeUploads = useState(0); // [count, setCount]
-    const totalSteps = 6;
+    const totalSteps = 7;
 
     const CLOUDINARY_CLOUD = "dltxunwku";
     const CLOUDINARY_PRESET = "quotation_upload";
@@ -90,8 +93,30 @@ export default function QuotationForm({ initialData, isEdit = false }: Quotation
     }, [formData.travelDates?.from, formData.travelDates?.to]);
 
     useEffect(() => {
-        if (initialData) {
-            setFormData(initialData);
+        // ─── HYDRATE FROM AI GENERATOR ─────────────────────────────────────────
+        const pendingData = localStorage.getItem("pending_ai_quotation");
+        if (pendingData) {
+            try {
+                const parsed = JSON.parse(pendingData);
+                // Ensure all arrays have IDs for React keys
+                const ensureIds = (arr: any[]) => (arr || []).map(item => ({ ...item, id: item.id || uuidv4() }));
+                
+                setFormData(prev => ({
+                    ...prev,
+                    ...parsed,
+                    id: uuidv4(), 
+                    status: "Draft",
+                    travelDates: parsed.travelDates || prev.travelDates,
+                    lowLevelHotels: ensureIds(parsed.lowLevelHotels),
+                    highLevelHotels: ensureIds(parsed.highLevelHotels),
+                    itinerary: ensureIds(parsed.itinerary),
+                    journeyMap: parsed.journeyMap || prev.journeyMap,
+                }));
+                toast.success("✨ AI Itinerary Imported Successfully!");
+                localStorage.removeItem("pending_ai_quotation");
+            } catch (err) {
+                console.error("Failed to hydrate from AI data:", err);
+            }
         }
     }, [initialData]);
 
@@ -499,7 +524,7 @@ ${designation}`;
                                                     </div>
                                                 )}
                                             </label>
-                                            <input id="expertPhoto" name="expertPhoto" type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                                    <input id="expertPhoto" name="expertPhoto" type="file" accept="image/*" className="hidden" onChange={async (e) => {
                                                 const file = e.target.files?.[0];
                                                 if (!file) return;
                                                 setUploadingField('expert_photo');
@@ -565,14 +590,14 @@ ${designation}`;
                                         <div className="flex items-center justify-between border-l-4 border-gray-200 pl-6">
                                             <h3 className="text-xl font-semibold">Standard Hotels</h3>
                                             <Button variant="outline" size="sm" className="rounded-xl" onClick={() => {
-                                                const h: Hotel = { id: uuidv4(), name: "", location: "", rating: 3, description: "", roomType: "", photos: [] };
+                                                const h: HotelType = { id: uuidv4(), name: "", location: "", rating: 3, description: "", roomType: "", photos: [] };
                                                 setFormData({ ...formData, lowLevelHotels: [...(formData.lowLevelHotels || []), h] });
                                             }}>+ Add Standard Stay</Button>
                                         </div>
 
                                         <div className="flex flex-col gap-8">
                                             {formData.lowLevelHotels?.map((hotel, index) => (
-                                                <div key={hotel.id} className="p-8 bg-gray-50/50 rounded-[2rem] border-2 border-transparent hover:border-gray-100 transition-all">
+                                                <div key={hotel.id || `low-${index}`} className="p-8 bg-gray-50/50 rounded-[2rem] border-2 border-transparent hover:border-gray-100 transition-all">
                                                     <div className="flex justify-between mb-6">
                                                         <h4 className="font-semibold text-gray-400">Standard Hotel {index + 1}</h4>
                                                         <Button variant="ghost" onClick={() => {
@@ -638,7 +663,7 @@ ${designation}`;
 
                                         <div className="flex flex-col gap-8">
                                             {formData.highLevelHotels?.map((hotel, index) => (
-                                                <div key={hotel.id} className="p-8 bg-primary/[0.02] rounded-[2rem] border-2 border-transparent hover:border-primary/5 transition-all">
+                                                <div key={hotel.id || `high-${index}`} className="p-8 bg-primary/[0.02] rounded-[2rem] border-2 border-transparent hover:border-primary/5 transition-all">
                                                     <div className="flex justify-between mb-6">
                                                         <h4 className="font-semibold text-primary opacity-50">Luxury Hotel {index + 1}</h4>
                                                         <Button variant="ghost" onClick={() => {
@@ -797,25 +822,56 @@ ${designation}`;
                                                             {item.photos?.map((photo, i) => (
                                                                 <div key={i} className="aspect-video rounded-2xl overflow-hidden relative group">
                                                                     <img src={photo} className="w-full h-full object-cover" />
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            const newItin = [...(formData.itinerary || [])];
-                                                                            newItin[index].photos.splice(i, 1);
-                                                                            setFormData({ ...formData, itinerary: newItin });
-                                                                        }}
-                                                                        className="absolute inset-0 bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
-                                                                    >
-                                                                        <Trash2 size={14} />
-                                                                    </button>
+                                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-2 px-2">
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setFormData(prev => ({ ...prev, heroImage: photo }));
+                                                                                toast.success("✨ Hero image set!");
+                                                                            }}
+                                                                            className="text-[10px] h-7 px-3 rounded-full bg-white text-gray-900 border border-gray-100 uppercase font-black tracking-widest hover:bg-primary hover:text-white"
+                                                                        >
+                                                                            {formData.heroImage === photo ? "⭐ Current Hero" : "Set Hero"}
+                                                                        </Button>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const newItin = [...(formData.itinerary || [])];
+                                                                                newItin[index].photos.splice(i, 1);
+                                                                                setFormData({ ...formData, itinerary: newItin });
+                                                                            }}
+                                                                            className="w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                                                        >
+                                                                            <Trash2 size={12} />
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
                                                             ))}
-                                                            <label htmlFor={`itinerary_photo_${index}`} className="aspect-video rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-primary/40 transition-all bg-white group/upload flex-col gap-2">
-                                                                {uploadingField === `itinerary_${index}` ? (
-                                                                    <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                                                                ) : (
-                                                                    <ImageIcon size={24} className="text-gray-300" />
+                                                            <div className="flex flex-col gap-2">
+                                                                <label htmlFor={`itinerary_photo_${index}`} className="flex-1 min-h-[80px] rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-primary/40 transition-all bg-white group/upload flex-col gap-2">
+                                                                    {uploadingField === `itinerary_${index}` ? (
+                                                                        <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                                                                    ) : (
+                                                                        <ImageIcon size={24} className="text-gray-300" />
+                                                                    )}
+                                                                </label>
+                                                                {item.photos?.length > 0 && (
+                                                                    <Button 
+                                                                        variant="ghost" 
+                                                                        size="sm" 
+                                                                        className="text-red-400 text-[9px] font-black uppercase tracking-widest hover:text-red-500 hover:bg-red-50"
+                                                                        onClick={() => {
+                                                                            const newItin = [...(formData.itinerary || [])];
+                                                                            newItin[index].photos = [];
+                                                                            setFormData({ ...formData, itinerary: newItin });
+                                                                            toast.success("Gallery cleared");
+                                                                        }}
+                                                                    >
+                                                                        Clear All
+                                                                    </Button>
                                                                 )}
-                                                            </label>
+                                                            </div>
                                                             <input id={`itinerary_photo_${index}`} name={`itinerary_photo_${index}`} type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'itinerary', true, index)} />
                                                         </div>
                                                     </div>
@@ -827,6 +883,139 @@ ${designation}`;
                         )}
 
                         {step === 5 && (
+                            <div className="flex flex-col gap-10">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                                            <MapIcon size={28} />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-3xl font-black text-gray-900 tracking-tight">Route Map Builder</h2>
+                                            <p className="text-gray-500 font-medium">Define stops and travel metrics.</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => {
+                                                const stops: JourneyStop[] = (formData.itinerary || []).map(day => ({
+                                                    name: day.title.split(' - ')[0] || "Stop",
+                                                    day: day.day,
+                                                    type: "Stay",
+                                                    icon: "building"
+                                                }));
+                                                setFormData({ ...formData, journeyMap: { summaryTiles: [{label:"Distance", value:"120 km", icon:"map"}, {label:"Duration", value:formData.duration || "", icon:"clock"}], stops } });
+                                                toast.success("Synced from Itinerary!");
+                                            }}
+                                            className="rounded-2xl border-2"
+                                        >
+                                            <RotateCcw size={16} className="mr-2" /> Sync from Itinerary
+                                        </Button>
+                                        <Button
+                                            onClick={() => {
+                                                const stop: JourneyStop = { name: "", day: (formData.journeyMap?.stops?.length || 0) + 1, type: "Stay" };
+                                                setFormData({ ...formData, journeyMap: { summaryTiles: formData.journeyMap?.summaryTiles || [], stops: [...(formData.journeyMap?.stops || []), stop] } });
+                                            }}
+                                            className="rounded-2xl"
+                                        >
+                                            <Plus size={20} className="mr-2" /> Add Stop
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-12">
+                                    {/* Tiles */}
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                        {(formData.journeyMap?.summaryTiles || []).map((tile, i) => (
+                                            <div key={i} className="p-6 bg-white border border-gray-100 rounded-3xl space-y-3 shadow-sm">
+                                                <div className="flex items-center gap-2 text-gray-400">
+                                                    <ClockIcon size={14} />
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">{tile.label}</span>
+                                                </div>
+                                                <Input
+                                                    value={tile.value}
+                                                    onChange={(e) => {
+                                                        const n = [...(formData.journeyMap?.summaryTiles || [])];
+                                                        n[i].value = e.target.value;
+                                                        setFormData({ ...formData, journeyMap: { ...formData.journeyMap!, summaryTiles: n } });
+                                                    }}
+                                                    className="border-none bg-gray-50 font-black text-lg p-0 h-auto focus-visible:ring-0"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Stops */}
+                                    <div className="space-y-4">
+                                        {(formData.journeyMap?.stops || []).map((stop, i) => (
+                                            <div key={i} className="flex flex-wrap md:flex-nowrap items-center gap-4 p-6 bg-gray-50/50 rounded-3xl border border-gray-100 group">
+                                                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-black text-xs shadow-sm group-hover:bg-primary group-hover:text-white transition-colors">
+                                                    {i + 1}
+                                                </div>
+                                                <Input 
+                                                    placeholder="Stop Name" 
+                                                    value={stop.name} 
+                                                    onChange={(e) => {
+                                                        const n = [...(formData.journeyMap?.stops || [])];
+                                                        n[i].name = e.target.value;
+                                                        setFormData({ ...formData, journeyMap: { ...formData.journeyMap!, stops: n } });
+                                                    }}
+                                                    className="flex-1 bg-white border-transparent focus:border-primary/20"
+                                                />
+                                                <select 
+                                                    value={stop.type}
+                                                    onChange={(e) => {
+                                                        const n = [...(formData.journeyMap?.stops || [])];
+                                                        n[i].type = e.target.value;
+                                                        setFormData({ ...formData, journeyMap: { ...formData.journeyMap!, stops: n } });
+                                                    }}
+                                                    className="h-10 px-4 bg-white border border-gray-100 rounded-xl text-xs font-bold font-sans outline-none"
+                                                >
+                                                    <option>Arrival</option>
+                                                    <option>Stay</option>
+                                                    <option>Transfer</option>
+                                                    <option>Departure</option>
+                                                </select>
+                                                <Input 
+                                                    placeholder="Icon (plane, hotel...)" 
+                                                    className="w-32 bg-white border-transparent focus:border-primary/20"
+                                                    value={stop.icon}
+                                                    onChange={(e) => {
+                                                        const n = [...(formData.journeyMap?.stops || [])];
+                                                        n[i].icon = e.target.value;
+                                                        setFormData({ ...formData, journeyMap: { ...formData.journeyMap!, stops: n } });
+                                                    }}
+                                                />
+                                                <Input 
+                                                    placeholder="Drive Time" 
+                                                    className="w-32 bg-white border-transparent focus:border-primary/20 font-mono text-[10px]"
+                                                    value={stop.driveTime}
+                                                    onChange={(e) => {
+                                                        const n = [...(formData.journeyMap?.stops || [])];
+                                                        n[i].driveTime = e.target.value;
+                                                        setFormData({ ...formData, journeyMap: { ...formData.journeyMap!, stops: n } });
+                                                    }}
+                                                />
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        const n = [...(formData.journeyMap?.stops || [])];
+                                                        n.splice(i, 1);
+                                                        setFormData({ ...formData, journeyMap: { ...formData.journeyMap!, stops: n } });
+                                                    }}
+                                                    className="text-red-400 hover:text-red-500 hover:bg-red-50"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 6 && (
                             <div className="flex flex-col gap-10">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-4">
@@ -914,7 +1103,7 @@ ${designation}`;
                             </div>
                         )}
 
-                        {step === 6 && (
+                        {step === 7 && (
                             <div className="flex flex-col gap-10">
                                 <div className="flex items-center gap-4 mb-4">
                                     <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">

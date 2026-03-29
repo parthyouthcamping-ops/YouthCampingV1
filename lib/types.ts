@@ -30,6 +30,19 @@ export type CustomSection = {
     isVisible: boolean;
 };
 
+export type JourneyStop = {
+    name: string;
+    day: number;
+    type: string; // Arrival, Stay, Departure
+    icon?: string; // airplane, building, map, etc.
+    driveTime?: string;
+};
+
+export type JourneyMap = {
+    summaryTiles: { label: string; value: string; icon: string }[];
+    stops: JourneyStop[];
+};
+
 export type Quotation = {
     id: string;
     slug: string;
@@ -60,6 +73,7 @@ export type Quotation = {
     lowLevelHotels: Hotel[];
     highLevelHotels: Hotel[];
     itinerary: DayItinerary[];
+    journeyMap?: JourneyMap;
     customSections?: CustomSection[];
     includes: string[];
     exclusions: string[];
